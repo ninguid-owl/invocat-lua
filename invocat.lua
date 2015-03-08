@@ -17,8 +17,8 @@ function lexer()
   function new_token(tag, value)
     local token = {}
     token.tag = tag
-    token.value = value
-    token.length = value:len()
+    token.value = value or ""
+    token.length = token.value:len()
     return token
   end
 
@@ -93,9 +93,6 @@ end
 
 -- parse tokens from the lexer
 function parser(lexer)
-  --local ast = {}
-  --local scope = {}
-  --local symbol
   local token = receive(lexer)
   local next_token = receive(lexer)
   -- functions to look ahead at and consume tokens from the lexer
@@ -105,18 +102,33 @@ function parser(lexer)
   end
   function take()
     token = next_token
-    next_token = receive(lexer)
+    next_token = receive(lexer) or new_token("EOF")
     return token
   end
   while token do
     -- this is the advance function: get next token
     -- if you need a look-ahead mechanism, that will take some thought
-    io.write("(", token.tag, " ", token.value, ")", "\n")
+    --io.write("(", token.tag, " ", token.value, ")", "\n")
+    if token.tag == "COMMENT" then
+      --print("Comment: " .. token.value)
+    elseif token.tag == "NAME" and peek("COLON") then
+      print("found def")
+      --local s = makeDef()
+    elseif token.tag == "EOF" then
+      print("Found EOF")
+    --  local s = makeItem()
+    end
+    --if s then print("Got a dang statement: " .. s) end
+    if peek("EOF") then
+      break
+    end
     take()
-    -- TODO recursive descend, probobably
+    --io.write("(", token.tag, " ", token.value, ")", "\n")
   end
-  -- return ...
 end
+
+
+
 
 -- abstract syntax
 -- Term ::= List [Term] | Literal string | Mix Term Term
@@ -140,21 +152,16 @@ function eval(term)
   end
 end
 
-------------------------------- testing
--- create an abstract syntax node
-function node(tag, value)
-  return {tag=tag, value=value}
-end
--- constructors
-function list(name, items) return {tag="List", value=terms} end
+function list(name, terms) return {tag="List", name=name, value=terms} end
+function ref(name) return {tag="Ref", name=name} end
 function literal(string) return {tag="Literal", value=string} end
 function mix(term1, term2) return {tag="Literal", value={term1, term2}} end
 
 -- tests
 local hihi = literal("hihihi")
-local animux = list({literal("hihihi")})
-print(eval(hihi))
-print(eval(animux))
+local animux = list("animux", {literal("hihihi")})
+--print(eval(hihi))
+--print(eval(animux))
 
 state = {}
 
