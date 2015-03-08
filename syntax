@@ -16,12 +16,12 @@ Concrete Syntax
 ---------------
 
 statement ::=
-  def
+  definition
   item
 
-def ::= name ':' itemlist
+definition ::= name ':' itemlist
 
-ref ::= '(' name ')'
+reference ::= '(' name ')'
 
 itemlist ::=
   item '|' itemlist
@@ -29,12 +29,12 @@ itemlist ::=
 
 item ::=
   literal item
-  ref item
+  reference item
   literal
-  ref
+  reference
 
 literal ::=
-  ink ws literal
+  ink white literal
   ink
 
 ink ::=
@@ -49,6 +49,6 @@ Lexical Syntax
 --------------
 
 name
-ws
+white
 punct
 ...

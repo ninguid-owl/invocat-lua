@@ -51,7 +51,7 @@ function lexer()
   local pipe = new_lex("PIPE", '|') 
   local parenl = new_lex("PARENL", '[(]')
   local parenr = new_lex("PARENR", '[)]')
-  local _literal = new_lex("_LITERAL", '"[^"]*"') -- TODO this is fake
+  --local _literal = new_lex("_LITERAL", '"[^"]*"') -- TODO this is fake
   local comment = new_lex("COMMENT", '[-][-].*$')
   local punctuation = new_lex("PUNCT", '%p') -- TODO all punct! check late
   local whitespace = new_lex("WHITE", '%s')
@@ -76,7 +76,7 @@ function lexer()
                     or pipe(line, i)
                     or parenl(line, i)
                     or parenr(line, i)
-                    or _literal(line, i)
+                    --or _literal(line, i)
                     or comment(line, i)
                     or punctuation(line, i)
                     or whitespace(line, i)
@@ -108,12 +108,13 @@ function parser(lexer)
     next_token = receive(lexer) or new_token("EOF")
     return token
   end
+  function trim() while(tag("WHITE")) do take() end end
 
   -- return a List
   function make_list()
     if tag("NAME") then
       local name = token.value
-      take() -- :
+      take() -- consume :
       take()
       local item = make_item()
       local items = {item}
@@ -122,52 +123,82 @@ function parser(lexer)
         local item = make_item()
         items[#items+1] = item
       end
-      --take()
+      print('def '..name)
       return def(name, items)
     else
       print("Error parsing List. Expected a NAME but found " .. token.tag)
     end
   end
 
-  function make_item()
-    while(tag("WHITE")) do take() end
-    local i = nil
-    if tag("PARENL") and peek("NAME") then
-      take() -- paren
-      i = ref(token.value)
-      take()
-      if not tag("PARENR") then
-        print("Error. Expecting ')' and found "..token.value)
-      else
-        take() -- paren
-        while(tag("WHITE")) do take() end
+  function make_white()
+  end
+  function make_ink()
+  end
+  function make_literal()
+    local l = token.value
+    take()
+    while tag("NAME") or tag("PUNCT") or tag("WHITE") do
+      if not (tag("WHITE") and peek("PIPE")) then
+        l = l..token.value
       end
+      take()
+    end
+    print('lit *'..l..'*')
+    return lit(l)
+  end
+  function make_reference()
+    --if tag("PARENL") and peek("NAME") then
+    take() -- consume paren
+    local r = token.value
+    print('ref '..r)
+    take() -- consume name
+    if not tag("PARENR") then
+      print("Error. Expecting ')' and found "..token.value)
+    else
+      take() -- consume paren
+    end
+    --end
+    return r and ref(r) or nil
+  end
+  function make_item(recursive)
+    -- trim leading whitespace from item (only at the beginning of the line)
+    if not recursive then trim() end
+    local i = nil
+    -- items can be a reference, a literal, or a mix of items
+    -- ref
+    if tag("PARENL") and peek("NAME") then
+      i = make_reference()
+      -- if a ref is followed by a newline or EOF, then that's it
+      -- otherwise, it's followed by another item
       if tag("NEWLINE") or tag("EOF") then return i
       else
-        local item = make_item()
+        local item = make_item(true)
         if item then return mix(i, item) else return i end
       end
-    elseif tag("_LITERAL") then
-      i = lit(token.value)
-      take()
-      while(tag("WHITE")) do take() end
+    -- lit
+    elseif tag("NAME") or tag("PUNCT") or tag("WHITE") then
+      i = make_literal()
       if tag("NEWLINE") or tag("EOF") then return i
       else
-        local item = make_item()
+        local item = make_item(true)
         if item then return mix(i, item) else return i end
       end
     end
     return i
   end
 
+  -- parse the token stream and built a list of statements
   local statements = {}
   while token do
+    -- a name followed by a colon is a list
+    -- if it's not a list, then it is an item
+    -- or maybe just whitespace
     if tag("NAME") and peek("COLON") then
       statements[#statements+1] = make_list()
-    elseif tag("_LITERAL") or tag("PARENL") then
-      local item = make_item()
-      statements[#statements+1] = item
+    elseif tag("NAME") or tag("PUNCT") or tag("PARENL") then
+      statements[#statements+1] = make_item()
     else
+      -- conume whitespace
       take()
     end
     if tag("EOF") or peek("EOF") then break end
