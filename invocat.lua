@@ -276,8 +276,26 @@ end
 
 ------------------------------------------------------------------- testing
 -- create an abstract syntax node
--- TODO a display function to print s-expression. and for tokens, too
-function node(tag, value) return {tag=tag, value=value} end
+function node(tag, value)
+  node_tostring = function ()
+    local s = "("..tag.." "
+    if tag == "Ref" or tag == "Lit" then
+      s = s..value
+    elseif tag == "Mix" then
+      for _,item in ipairs(value) do
+        s = s.." "..item.tostring()
+      end
+    elseif tag == "Def" then
+      -- value[1] is name, value[2] is items
+      s = s..value[1].." "
+      for _,item in ipairs(value[2]) do
+        s = s.." "..item.tostring()
+      end
+    end
+    return s..")"
+  end
+  return {tag=tag, value=value, tostring=node_tostring}
+end
 
 -- abstract syntax
 -- constructors
@@ -340,6 +358,18 @@ local animux_list = {dog, cat, bear, owl, mouse, deer, r, m, mr}
 local recurse_list = {mr, mr, l}
 local animux = def('animux', animux_list)
 local recurse = def('recurse', recurse_list)
+
+--[[
+print("tostring TEST SECTION------------------")
+local test = def('wizard', {lit("rabbit")})
+print(test.tostring())
+print(recurse.tostring())
+print(deer.tostring()) -- deer
+print(r.tostring()) -- animux
+print(mr.tostring()) -- x
+print(animux.tostring())
+print("END tostring TEST SECTION------------------")
+--]]
 
 eval(animux)
 eval(recurse)
