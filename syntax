@@ -1,0 +1,43 @@
+Abstract Syntax
+
+Term ::= List [Term]
+         Literal literal
+         Mix Term Term
+
+
+
+Concrete Syntax
+
+statement ::=
+  def
+  item
+
+def ::= name ':' itemlist
+
+ref ::= '(' name ')'
+
+itemlist ::=
+  itemlist
+  item '|' itemlist
+
+item ::=
+  literal item
+  ref item
+  literal
+  ref
+
+literal ::=
+  ink
+  ink ws literal
+
+ink ::=
+  name ink
+  punct ink
+  name
+  punct
+
+
+
+Lexical Syntax
+
+...
