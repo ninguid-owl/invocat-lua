@@ -7,7 +7,7 @@ Statement ::= Def
 Def ::= List name [Item]
 
 Item ::= Ref name
-         Literal literal
+         Lit literal
          Mix Item Item
 
 
