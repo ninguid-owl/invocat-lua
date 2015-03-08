@@ -25,8 +25,7 @@ function lexer()
   -- definition of a lexical item
   -- this function takes a tag and a pattern -- TODO and optional f
   -- returns a function that consumes a particular lexical item
-  -- and produces a token
-  -- (and executes f)
+  -- and produces a token / executes f
   function new_lex(tag, pattern)
     local f = function(content)
       --io.write("(", tag, " ", content, ")", "\n")
@@ -52,7 +51,7 @@ function lexer()
   local pipe = new_lex("PIPE", '|') 
   local parenl = new_lex("PARENL", '[(]')
   local parenr = new_lex("PARENR", '[)]')
-  local _literal = new_lex("_LITERAL", '"[^"]*"')
+  local _literal = new_lex("_LITERAL", '"[^"]*"') -- TODO this is fake
   local comment = new_lex("COMMENT", '[-][-].*$')
   local punctuation = new_lex("PUNCT", '%p') -- TODO all punct! check late
   local whitespace = new_lex("WHITE", '%s')
@@ -65,7 +64,7 @@ function lexer()
       local line = f:read(); if not line then break end -- TODO end token?
       linenum = linenum + 1
       -- if linenum > 1 then we've read a new line
-      if linenum > 1 then send(new_token("NEWLINE", "")) end
+      if linenum > 1 then send(new_token("NEWLINE", "")) end -- TODO
       io.write("\t\t", ("%5d "):format(linenum), line, "\n")
 
       -- start at index 1 and try to match patterns
@@ -127,45 +126,63 @@ function parser(lexer)
   end
 end
 
-
-
+------------------------------------------------------------------- testing
+-- create an abstract syntax node
+function node(tag, value)
+  return {tag=tag, value=value}
+end
 
 -- abstract syntax
--- Term ::= List [Term] | Literal string | Mix Term Term
--- term = {tag="List", value={Term, ...}} or otherwise
--- this is where Haskell is awesome
+-- constructors
+-- List
+function def(name, items) return node("Def", {name, items}) end
+-- Item
+function ref(name) return node("Ref", name) end
+function lit(literal) return node("Lit", literal) end
+function mix(item1, item2) return node("Mix", {item1, item2}) end
+
+state = {}
+math.randomseed(os.time())
 function eval(term)
+  local tag = term.tag
   local v = term.value
-  if not v then return nil end
-  -- list: randomly pick an element of the list
-  if term.tag == "List" then
-    print("length of v "..#v)
-    if #v == 0 then return "" end -- TODO test
-    return eval(v[math.random(#v)])
-  elseif term.tag == "Literal" then
-    return v
-  elseif term.tag == "Mix" then
-    local t1 = eval(v[1])
-    local t2 = eval(v[2])
-    if t1 and t2 then return t1..t2
-    else return "" end
+  local nothing = ""
+  -- if not v then return nil end -- TODO nec?
+  -- ref. randomly pick an element of the list
+  if tag == "Ref" then
+    local name = v
+    local list = state[name] or {} -- undefined names => {}
+    if #list == 0 then return nothing end -- TODO test
+    return eval(list[math.random(#list)])
+  -- lit. eval to itself
+  elseif tag == "Lit" then
+    return v or nothing
+  -- mix. eval to evaluation of the two items
+  elseif tag == "Mix" then
+    local t1 = eval(v[1]) or nothing
+    local t2 = eval(v[2]) or nothing
+    return t1..t2
+  elseif tag == "Def" then
+    local name = v[1]
+    local list = v[2]
+    state[name] = list
+    -- return ???
   end
 end
 
-function list(name, terms) return {tag="List", name=name, value=terms} end
-function ref(name) return {tag="Ref", name=name} end
-function literal(string) return {tag="Literal", value=string} end
-function mix(term1, term2) return {tag="Literal", value={term1, term2}} end
-
 -- tests
-local hihi = literal("hihihi")
-local animux = list("animux", {literal("hihihi")})
---print(eval(hihi))
---print(eval(animux))
+local hihi = lit("hihihi hohoh")
+local a = {lit('dog'), lit('bear'), lit('cat')}
+local animux = def('animux', a)
+local r = ref('animux')
+local mux = mix(mix(r, r), hihi)
 
-state = {}
+eval(animux)
+print(eval(r))
+print(eval(mux))
 
-parser(lexer())
+
+--parser(lexer())
 
 -- use coroutines to set up a producer/consumer model for the lexer and the
 -- parser
