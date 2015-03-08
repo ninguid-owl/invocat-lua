@@ -9,53 +9,54 @@ end
 
 function send(x) coroutine.yield(x) end
 
--- definition of a token
--- has a tag, a value, a length
-function new_token(tag, value)
-  local token = {}
-  token.tag = tag
-  token.value = value
-  token.length = value:len()
-  return token
-end
-
--- definition of a lexical item
--- this function takes a tag and a pattern -- TODO and optional f
--- returns a function that consumes a particular lexical item
--- and produces a token
--- (and executes f)
-function new_lex(tag, pattern)
-  local f = function(content)
-    --io.write("(", tag, " ", content, ")", "\n")
-    return new_token(tag, content)
-  end
-  -- anchor pattern
-  pattern = '^'..pattern
-  -- return a function that matches the lexical item defined by pattern
-  local function lex(line, index)
-    index = index or 1
-    local match = line:match(pattern, index)
-    if match then return f(match) end
-    return match
-  end
-  return lex
-end
-
--- create the lexical items
--- TODO literally in a table and then don't have to check them in the
--- parse loop
-local name = new_lex("NAME", '[%a_]+') 
-local colon = new_lex("COLON", ':') 
-local pipe = new_lex("PIPE", '|') 
-local parenl = new_lex("PARENL", '[(]')
-local parenr = new_lex("PARENR", '[)]')
-local comment = new_lex("COMMENT", '[-][-].*$')
-local punctuation = new_lex("PUNCT", '%p') -- TODO all punct! check late
-local whitespace = new_lex("WHITE", '%s')
-
 -- read file
 -- returns a coroutine that spits out tokens
 function lexer()
+  -- definition of a token
+  -- has a tag, a value, a length
+  function new_token(tag, value)
+    local token = {}
+    token.tag = tag
+    token.value = value
+    token.length = value:len()
+    return token
+  end
+
+  -- definition of a lexical item
+  -- this function takes a tag and a pattern -- TODO and optional f
+  -- returns a function that consumes a particular lexical item
+  -- and produces a token
+  -- (and executes f)
+  function new_lex(tag, pattern)
+    local f = function(content)
+      --io.write("(", tag, " ", content, ")", "\n")
+      return new_token(tag, content)
+    end
+    -- anchor pattern
+    pattern = '^'..pattern
+    -- return a function that matches the lexical item defined by pattern
+    local function lex(line, index)
+      index = index or 1
+      local match = line:match(pattern, index)
+      if match then return f(match) end
+      return match
+    end
+    return lex
+  end
+
+  -- create the lexical items
+  -- TODO literally in a table and then don't have to check them in the
+  -- parse loop
+  local name = new_lex("NAME", '[%a_]+') 
+  local colon = new_lex("COLON", ':') 
+  local pipe = new_lex("PIPE", '|') 
+  local parenl = new_lex("PARENL", '[(]')
+  local parenr = new_lex("PARENR", '[)]')
+  local _literal = new_lex("_LITERAL", '"[^"]*"')
+  local comment = new_lex("COMMENT", '[-][-].*$')
+  local punctuation = new_lex("PUNCT", '%p') -- TODO all punct! check late
+  local whitespace = new_lex("WHITE", '%s')
+
   return coroutine.create(function()
     local f = assert(io.open(arg[1], "rb"))
     local linenum = 0
@@ -63,6 +64,8 @@ function lexer()
       -- for each line
       local line = f:read(); if not line then break end -- TODO end token?
       linenum = linenum + 1
+      -- if linenum > 1 then we've read a new line
+      if linenum > 1 then send(new_token("NEWLINE", "")) end
       io.write("\t\t", ("%5d "):format(linenum), line, "\n")
 
       -- start at index 1 and try to match patterns
@@ -74,6 +77,7 @@ function lexer()
                     or pipe(line, i)
                     or parenl(line, i)
                     or parenr(line, i)
+                    or _literal(line, i)
                     or comment(line, i)
                     or punctuation(line, i)
                     or whitespace(line, i)
@@ -92,12 +96,23 @@ function parser(lexer)
   --local ast = {}
   --local scope = {}
   --local symbol
-  while true do
+  local token = receive(lexer)
+  local next_token = receive(lexer)
+  -- functions to look ahead at and consume tokens from the lexer
+  function peek(tag)
+    if next_token.tag == tag then return true end
+    return false
+  end
+  function take()
+    token = next_token
+    next_token = receive(lexer)
+    return token
+  end
+  while token do
     -- this is the advance function: get next token
     -- if you need a look-ahead mechanism, that will take some thought
-    local token = receive(lexer)
-    if not token then break end
-    -- io.write("(", token.tag, " ", token.value, ")", "\n")
+    io.write("(", token.tag, " ", token.value, ")", "\n")
+    take()
     -- TODO recursive descend, probobably
   end
   -- return ...
@@ -125,18 +140,25 @@ function eval(term)
   end
 end
 
--- TODO tests
-function list(terms) return {tag="List", value=terms} end
+------------------------------- testing
+-- create an abstract syntax node
+function node(tag, value)
+  return {tag=tag, value=value}
+end
+-- constructors
+function list(name, items) return {tag="List", value=terms} end
 function literal(string) return {tag="Literal", value=string} end
 function mix(term1, term2) return {tag="Literal", value={term1, term2}} end
 
+-- tests
 local hihi = literal("hihihi")
 local animux = list({literal("hihihi")})
 print(eval(hihi))
 print(eval(animux))
 
+state = {}
 
---parser(lexer())
+parser(lexer())
 
 -- use coroutines to set up a producer/consumer model for the lexer and the
 -- parser
