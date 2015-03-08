@@ -181,9 +181,7 @@ end
 
 ------------------------------------------------------------------- testing
 -- create an abstract syntax node
-function node(tag, value)
-  return {tag=tag, value=value}
-end
+function node(tag, value) return {tag=tag, value=value} end
 
 -- abstract syntax
 -- constructors
@@ -212,8 +210,8 @@ function eval(term)
     return v or nothing
   -- mix. eval to evaluation of the two items
   elseif tag == "Mix" then
-    local t1 = eval(v[1]) or nothing
-    local t2 = eval(v[2]) or nothing
+    local t1 = eval(v[1]) -- or nothing
+    local t2 = eval(v[2]) -- or nothing
     return t1..t2
   elseif tag == "Def" then
     local name = v[1]
@@ -224,15 +222,27 @@ function eval(term)
 end
 
 -- tests
-local hihi = lit("hihihi hohoh")
-local a = {lit('dog'), lit('bear'), lit('cat')}
-local animux = def('animux', a)
+local dog = lit('dog')
+local cat = lit('cat')
+local bear = lit('bear')
+local owl = lit('owl')
+local mouse = lit('mouse')
+local deer = lit('deer')
 local r = ref('animux')
-local mux = mix(mix(r, r), hihi)
+local r2 = ref('recurse')
+local l = lit("x")
+local m = mix(l, r)
+local mr = mix(l, mix(m, r))
+local animux_list = {dog, cat, bear, owl, mouse, deer, r, m, mr}
+local recurse_list = {mr, mr, l}
+local animux = def('animux', animux_list)
+local recurse = def('recurse', recurse_list)
 
 eval(animux)
-print(eval(r))
-print(eval(mux))
+eval(recurse)
+for i=1,50 do
+  -- print(eval(r2))
+end
 
 
 local statements = parser(lexer())
