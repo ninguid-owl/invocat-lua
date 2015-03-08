@@ -95,6 +95,10 @@ function parser(lexer)
   local token = receive(lexer)
   local next_token = receive(lexer)
   -- functions to look ahead at and consume tokens from the lexer
+  function tag(tag)
+    if token.tag == tag then return true end
+    return false
+  end
   function peek(tag)
     if next_token.tag == tag then return true end
     return false
@@ -104,26 +108,75 @@ function parser(lexer)
     next_token = receive(lexer) or new_token("EOF")
     return token
   end
+
+  -- return a List
+  function make_list()
+    if tag("NAME") then
+      local name = token.value
+      take() -- :
+      take()
+      local item = make_item()
+      local items = {item}
+      while(tag("PIPE")) do
+        take()
+        local item = make_item()
+        items[#items+1] = item
+      end
+      --take()
+      return def(name, items)
+    else
+      print("Error parsing List. Expected a NAME but found " .. token.tag)
+    end
+  end
+
+  function make_item()
+    while(tag("WHITE")) do take() end
+    local i = nil
+    if tag("PARENL") and peek("NAME") then
+      take() -- paren
+      i = ref(token.value)
+      take()
+      if not tag("PARENR") then
+        print("Error. Expecting ')' and found "..token.value)
+      else
+        take() -- paren
+        while(tag("WHITE")) do take() end
+      end
+      if tag("NEWLINE") or tag("EOF") then return i
+      else
+        local item = make_item()
+        if item then return mix(i, item) else return i end
+        --return mix(i, make_item())
+      end
+    elseif tag("_LITERAL") then
+      i = lit(token.value)
+      take()
+      while(tag("WHITE")) do take() end
+      if tag("NEWLINE") or tag("EOF") then return i
+      else
+        local item = make_item()
+        if item then return mix(i, item) else return i end
+        --return mix(i, make_item())
+      end
+    end
+    return i
+  end
+
+  local statements = {}
   while token do
-    -- this is the advance function: get next token
-    -- if you need a look-ahead mechanism, that will take some thought
-    --io.write("(", token.tag, " ", token.value, ")", "\n")
-    if token.tag == "COMMENT" then
-      --print("Comment: " .. token.value)
-    elseif token.tag == "NAME" and peek("COLON") then
-      print("found def")
-      --local s = makeDef()
-    elseif token.tag == "EOF" then
-      print("Found EOF")
-    --  local s = makeItem()
+    if tag("NAME") and peek("COLON") then
+      statements[#statements+1] = make_list()
+    elseif tag("_LITERAL") or tag("PARENL") then
+      --take()
+      local item = make_item()
+      statements[#statements+1] = item
+    else
+      take()
     end
-    --if s then print("Got a dang statement: " .. s) end
-    if peek("EOF") then
-      break
-    end
-    take()
+    if tag("EOF") or peek("EOF") then break end
     --io.write("(", token.tag, " ", token.value, ")", "\n")
   end
+  return statements
 end
 
 ------------------------------------------------------------------- testing
@@ -182,7 +235,10 @@ print(eval(r))
 print(eval(mux))
 
 
---parser(lexer())
+local statements = parser(lexer())
+for _,s in ipairs(statements) do
+  print(eval(s))
+end
 
 -- use coroutines to set up a producer/consumer model for the lexer and the
 -- parser
