@@ -1,12 +1,19 @@
 Abstract Syntax
+---------------
 
-Term ::= List [Term]
+Statement ::= Def
+              Item
+
+Def ::= List name [Item]
+
+Item ::= Ref name
          Literal literal
-         Mix Term Term
+         Mix Item Item
 
 
 
 Concrete Syntax
+---------------
 
 statement ::=
   def
@@ -17,8 +24,8 @@ def ::= name ':' itemlist
 ref ::= '(' name ')'
 
 itemlist ::=
-  itemlist
   item '|' itemlist
+  item
 
 item ::=
   literal item
@@ -27,8 +34,8 @@ item ::=
   ref
 
 literal ::=
-  ink
   ink ws literal
+  ink
 
 ink ::=
   name ink
@@ -39,5 +46,9 @@ ink ::=
 
 
 Lexical Syntax
+--------------
 
+name
+ws
+punct
 ...
