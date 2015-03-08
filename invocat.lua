@@ -146,7 +146,6 @@ function parser(lexer)
       else
         local item = make_item()
         if item then return mix(i, item) else return i end
-        --return mix(i, make_item())
       end
     elseif tag("_LITERAL") then
       i = lit(token.value)
@@ -156,7 +155,6 @@ function parser(lexer)
       else
         local item = make_item()
         if item then return mix(i, item) else return i end
-        --return mix(i, make_item())
       end
     end
     return i
@@ -167,7 +165,6 @@ function parser(lexer)
     if tag("NAME") and peek("COLON") then
       statements[#statements+1] = make_list()
     elseif tag("_LITERAL") or tag("PARENL") then
-      --take()
       local item = make_item()
       statements[#statements+1] = item
     else

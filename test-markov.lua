@@ -61,22 +61,25 @@ insert(prefix(w1, w2), NOWORD)
 
 -- print Invocat statements
 -- TODO: escape colons parens etc
+print("-- definitions")
 for k,v in pairs(statetab) do
   -- pull the two separate words out of the key
   local idx, w1, w2
-  idx = string.find(k, " ")
-  w1 = string.sub(k, 0, idx)
-  w2 = string.sub(k, idx+1)
-  local val = v[1]
+  idx = k:find(" ")
+  w1 = k:sub(0, idx)
+  w2 = k:sub(idx+1)
+  local val = w2.." ("..w2.." "..v[1]..")"
   if #v>1 then 
     for i=2,#v do
-      val = val.."|"..v[i]
+      val = val.."|"..w2.." ("..w2.." "..v[i]..")"
     end
   end
-  --print(k..": "..val)
-  -- For each option in val, we need to print the pipe-separated construction
-  print(k..": "..w2.." ("..w2.." "..val..")")
+  print(k..": "..val)
 end
+
+-- begin generation with (NOWORD NOWORD)
+print("-- expressions")
+print("("..NOWORD.." "..NOWORD..")")
 
 ---- generate
 --startkey = keys[math.random(1, #keys)]
@@ -91,5 +94,5 @@ end
 --  io.write(nextword, " ")
 --  w1 = w2; w2 = nextword
 --end
-io.write("\n")
+--io.write("\n")
 
