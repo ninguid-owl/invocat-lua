@@ -57,11 +57,15 @@ function lexer()
   local whitespace = new_lex("WHITE", '%s')
 
   return coroutine.create(function()
-    local f = assert(io.open(arg[1], "rb"))
+    local next_line = io.read
+    if arg[1] then
+      local f = assert(io.open(arg[1], "rb"))
+      next_line = function () return f:read() end
+    end
     local linenum = 0
-    while true do
+    local line = next_line()
+    while line do
       -- for each line
-      local line = f:read(); if not line then break end -- TODO end token?
       linenum = linenum + 1
       -- if linenum > 1 then we've read a new line
       if linenum > 1 then send(new_token("NEWLINE", "")) end -- TODO
@@ -86,6 +90,7 @@ function lexer()
         else i = i + 1
         end
       end
+      line = next_line()
     end
   end)
 end
