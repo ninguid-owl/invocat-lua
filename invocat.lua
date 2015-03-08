@@ -87,16 +87,56 @@ function lexer()
   end)
 end
 
+-- parse tokens from the lexer
 function parser(lexer)
+  --local ast = {}
+  --local scope = {}
+  --local symbol
   while true do
     -- this is the advance function: get next token
-    local x = receive(lexer)
-    if not x then break end
-    io.write("(", x.tag, " ", x.value, ")", "\n")
+    -- if you need a look-ahead mechanism, that will take some thought
+    local token = receive(lexer)
+    if not token then break end
+    -- io.write("(", token.tag, " ", token.value, ")", "\n")
+    -- TODO recursive descend, probobably
+  end
+  -- return ...
+end
+
+-- abstract syntax
+-- Term ::= List [Term] | Literal string | Mix Term Term
+-- term = {tag="List", value={Term, ...}} or otherwise
+-- this is where Haskell is awesome
+function eval(term)
+  local v = term.value
+  if not v then return nil end
+  -- list: randomly pick an element of the list
+  if term.tag == "List" then
+    print("length of v "..#v)
+    if #v == 0 then return "" end -- TODO test
+    return eval(v[math.random(#v)])
+  elseif term.tag == "Literal" then
+    return v
+  elseif term.tag == "Mix" then
+    local t1 = eval(v[1])
+    local t2 = eval(v[2])
+    if t1 and t2 then return t1..t2
+    else return "" end
   end
 end
 
-parser(lexer())
+-- TODO tests
+function list(terms) return {tag="List", value=terms} end
+function literal(string) return {tag="Literal", value=string} end
+function mix(term1, term2) return {tag="Literal", value={term1, term2}} end
+
+local hihi = literal("hihihi")
+local animux = list({literal("hihihi")})
+print(eval(hihi))
+print(eval(animux))
+
+
+--parser(lexer())
 
 -- use coroutines to set up a producer/consumer model for the lexer and the
 -- parser
