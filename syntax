@@ -1,10 +1,10 @@
 Abstract Syntax
 ---------------
 
-Statement ::= Def
+Statement ::= List
               Item
 
-Def ::= List name [Item]
+List ::= Def name [Item]
 
 Item ::= Ref name
          Lit literal
