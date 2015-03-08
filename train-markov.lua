@@ -1,12 +1,13 @@
 #! /usr/local/bin/lua
 
--- Read from standard input and output a Markov data structure in the form
--- of Invocat definitions. Also print a starting expression to kick off the
--- generation.
+-- Read from standard input or a file and print a Markov data structure in the
+-- form of Invocat definitions. Also print a starting expression to kick off
+-- the generation.
 
 -- TODO: escape all invocat speacial chars in original text: :,(,)
 -- TODO: escape our key separator character: _
 
+local RANDOM_START = false
 local pattern =  "%S+"
 
 function allwords ()
@@ -80,16 +81,17 @@ for k,v in pairs(statetab) do
 end
 
 print("-- expressions")
--- begin generation with (NOWORD NOWORD)
-print("("..NOWORD.."_"..NOWORD..")")
---[[
--- Or, optionally, start from a random key
--- create keys so we can start anywhere
-local keys, i = {}, 1
-for k,_ in pairs(statetab) do
-  keys[i] = k
-  i = i+1
+if RANDOM_START then
+  -- create keys from which to choose at random
+  local keys, i = {}, 1
+  for k,_ in pairs(statetab) do
+    keys[i] = k
+    i = i+1
+  end
+  math.randomseed(os.time())
+  print("("..keys[math.random(#keys)]..")")
+else
+  -- begin generation with (NOWORD NOWORD) which will produce
+  -- the opening word from the training document
+  print("("..NOWORD.."_"..NOWORD..")")
 end
-math.randomseed(os.time())
-print("("..keys[math.random(#keys)]..")")
---]]
