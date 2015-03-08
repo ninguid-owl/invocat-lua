@@ -57,12 +57,10 @@ function lexer()
   local whitespace = new_lex("WHITE", '%s')
 
   return coroutine.create(function()
-    local next_line
+    local next_line = io.read
     if arg[1] then
       local f = assert(io.open(arg[1], "rb"))
       next_line = function () return f:read() end
-    else
-      next_line = io.read
     end
     local linenum = 0
     local line = next_line()

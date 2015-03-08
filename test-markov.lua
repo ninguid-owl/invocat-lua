@@ -1,15 +1,21 @@
---
+#! /usr/local/bin/lua
+
 -- Read from standard input and output a Markov data structure in the form
 -- of Invocat definitions. Also print a starting expression to kick off the
 -- generation.
---
+
 -- TODO: escape all invocat speacial chars in original text: :,(,)
 -- TODO: escape our key separator character: _
---
+
 local pattern =  "%S+"
 
 function allwords ()
-  local line = io.read()
+  local next_line = io.read
+  if arg[1] then
+    local f = assert(io.open(arg[1], "rb"))
+    next_line = function () return f:read() end
+  end
+  local line = next_line()
   local pos = 1
   return function ()
     while line do
@@ -18,7 +24,7 @@ function allwords ()
         pos = e + 1
         return string.sub(line, s, e)
       else
-        line = io.read()
+        line = next_line()
         pos = 1
       end
     end
