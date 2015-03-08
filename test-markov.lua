@@ -1,6 +1,10 @@
 --
--- Read from standard input and output a Markov data structure as an
--- Invocat file.
+-- Read from standard input and output a Markov data structure in the form
+-- of Invocat definitions. Also print a starting expression to kick off the
+-- generation.
+--
+-- TODO: escape all invocat speacial chars in original text: :,(,)
+-- TODO: escape our key separator character: _
 --
 local pattern =  "%S+"
 
@@ -38,7 +42,7 @@ function insert (index, value)
   end
 end
 
-local NOWORD = "NIL"
+local NOWORD = ""
 
 -- build table
 local w1, w2 = NOWORD, NOWORD

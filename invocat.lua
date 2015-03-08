@@ -57,11 +57,17 @@ function lexer()
   local whitespace = new_lex("WHITE", '%s')
 
   return coroutine.create(function()
-    local f = assert(io.open(arg[1], "rb"))
+    local next_line
+    if arg[1] then
+      local f = assert(io.open(arg[1], "rb"))
+      next_line = function () return f:read() end
+    else
+      next_line = io.read
+    end
     local linenum = 0
-    while true do
+    local line = next_line()
+    while line do
       -- for each line
-      local line = f:read(); if not line then break end -- TODO end token?
       linenum = linenum + 1
       -- if linenum > 1 then we've read a new line
       if linenum > 1 then send(new_token("NEWLINE", "")) end -- TODO
@@ -86,6 +92,7 @@ function lexer()
         else i = i + 1
         end
       end
+      line = next_line()
     end
   end)
 end
@@ -123,7 +130,7 @@ function parser(lexer)
         local item = make_item()
         items[#items+1] = item
       end
-      print('def '..name)
+      --print('def '..name)
       return def(name, items)
     else
       print("Error parsing List. Expected a NAME but found " .. token.tag)
@@ -143,14 +150,14 @@ function parser(lexer)
       end
       take()
     end
-    print('lit *'..l..'*')
+    --print('lit *'..l..'*')
     return lit(l)
   end
   function make_reference()
     --if tag("PARENL") and peek("NAME") then
     take() -- consume paren
     local r = token.value
-    print('ref '..r)
+    --print('ref '..r)
     take() -- consume name
     if not tag("PARENR") then
       print("Error. Expecting ')' and found "..token.value)
