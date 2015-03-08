@@ -108,97 +108,159 @@ function parser(lexer)
     next_token = receive(lexer) or new_token("EOF")
     return token
   end
-  function trim() while(tag("WHITE")) do take() end end
 
-  -- return a List
-  function make_list()
-    if tag("NAME") then
-      local name = token.value
-      take() -- consume :
-      take()
-      local item = make_item()
-      local items = {item}
-      while(tag("PIPE")) do
-        take()
-        local item = make_item()
-        items[#items+1] = item
-      end
-      print('def '..name)
-      return def(name, items)
-    else
-      print("Error parsing List. Expected a NAME but found " .. token.tag)
-    end
-  end
-
+  -- functions for the lowest level concrete syntax items
+  -- white, ink
+  -- white captures contiguous white space
   function make_white()
-  end
-  function make_ink()
-  end
-  function make_literal()
-    local l = token.value
-    take()
-    while tag("NAME") or tag("PUNCT") or tag("WHITE") do
-      if not (tag("WHITE") and peek("PIPE")) then
-        l = l..token.value
-      end
+    local s = ""
+    while tag("WHITE") do
+      s = s..token.value
       take()
     end
-    print('lit *'..l..'*')
-    return lit(l)
+    if s == "" then return nil end
+    return s
   end
-  function make_reference()
-    --if tag("PARENL") and peek("NAME") then
-    take() -- consume paren
-    local r = token.value
-    print('ref '..r)
-    take() -- consume name
-    if not tag("PARENR") then
-      print("Error. Expecting ')' and found "..token.value)
+  -- ink captures contiguous black: names and punctuation
+  function make_ink()
+    local s = ""
+    while tag("NAME") or tag("PUNCT") do
+      s = s..token.value
+      take()
+    end
+    if s == "" then return nil end
+    return s
+  end
+
+  -- name
+  function make_name()
+    local s = ""
+    while tag("NAME") do
+      s = s..token.value
+      take()
+    end
+    if s == "" then return nil end
+    return s
+  end
+
+  -- literal is ink [white literal]
+  -- returns a Lit
+  function make_literal(r)
+    local l = make_ink()
+    -- if we can't build up the literal, return what have so far
+    if not l then return r end
+    -- if we passed anything in recursively, then build on that
+    --if r then for k,v in pairs(r) do print("r "..k.." "..v) end end -- TODO
+    l = r and r.value..l or l
+    local w = make_white()
+    -- TODO parenl?
+    if w and (tag("NAME") or tag("PUNCT") or tag("PARENL")) then
+      l = lit(l..w)
+      l = make_literal(l)
     else
-      take() -- consume paren
+      l = lit(l)
+      --print('found a literal followd by ('..l.tag.." "..l.value..")") -- TODO
+    end
+    print('lit *'..l.value..'*')
+    return l
+  end
+
+  -- reference is (name)
+  -- returns a Ref
+  function make_reference()
+    local r = nil
+    if tag("PARENL") and peek("NAME") then
+      take() -- consume left paren
+      r = make_name()
+      if not tag("PARENR") then
+        print("Error. Expecting ')' and found "..token.value)
+        return nil
+      end
+      take() -- consume right paren
+      print('ref '..r)
     end
     --end
     return r and ref(r) or nil
   end
-  function make_item(recursive)
-    -- trim leading whitespace from item (only at the beginning of the line)
-    if not recursive then trim() end
+
+  -- an item is a reference, literal, or mix of items
+  -- returns Ref, Lit, or Mix
+  function make_Item()
     local i = nil
-    -- items can be a reference, a literal, or a mix of items
-    -- ref
-    if tag("PARENL") and peek("NAME") then
-      i = make_reference()
-      -- if a ref is followed by a newline or EOF, then that's it
-      -- otherwise, it's followed by another item
-      if tag("NEWLINE") or tag("EOF") then return i
-      else
-        local item = make_item(true)
-        if item then return mix(i, item) else return i end
-      end
-    -- lit
-    elseif tag("NAME") or tag("PUNCT") or tag("WHITE") then
-      i = make_literal()
-      if tag("NEWLINE") or tag("EOF") then return i
-      else
-        local item = make_item(true)
-        if item then return mix(i, item) else return i end
-      end
+    -- ref or lit
+    i = make_reference() or make_literal()
+    if not i then
+      --print("Error making item: could not find literal or reference")
+      return nil
     end
-    return i
+
+    -- TODO ignore whitespace between items ?
+    -- how to do that selectively?
+    -- another (adj) festival
+    -- a ref next to a lit, or vice versa, -> keep the white between
+    make_white()
+
+    -- if an item is followed by a newline or EOF, then that's it
+    -- otherwise, it's followed by another item
+    if tag("NEWLINE") or tag("EOF") then
+      return i
+    else
+      --print('found a ref or lit, then ('..i.tag.." "..i.value..")") -- TODO
+      local item = make_Item()
+      if item then return mix(i, item) else return i end
+    end
   end
+
+  -- itemlist
+  function make_itemlist()
+    local i = make_Item()
+    if not i then
+      --print("Error making itemlist: could not find item")
+      return nil
+    end
+    local items = {i}
+    while tag("PIPE") do
+      take()
+      local item = make_Item()
+      if not item then
+        --print("Error making itemlist: could not find item")
+        return nil
+      end
+      items[#items+1] = item
+    end
+  end
+
+  -- return a List
+  function make_List()
+    if not peek("COLON") then
+      print('in make_List, we have ('..token.tag..'), ('..next_token.tag..' '..next_token.value..')')
+      return nil
+    end
+    local name = make_name()
+    if not name then
+      --print("Error making List: could not find NAME")
+      return nil
+    end
+    -- match : and then consume whitespace -- TODO
+    take()
+    make_white()
+    local items = make_itemlist()
+    print('def '..name)
+    return def(name, items)
+  end
+
 
   -- parse the token stream and built a list of statements
   local statements = {}
   while token do
-    -- a name followed by a colon is a list
-    -- if it's not a list, then it is an item
-    -- or maybe just whitespace
-    if tag("NAME") and peek("COLON") then
-      statements[#statements+1] = make_list()
-    elseif tag("NAME") or tag("PUNCT") or tag("PARENL") then
-      statements[#statements+1] = make_item()
+    -- a statement is a list definition or an item
+    -- TODO or maybe just whitespace
+    local s = make_List() or make_Item()
+    if s then
+      statements[#statements+1] = s
     else
-      -- conume whitespace
+      -- consume whitespace or whatever it is
+      --print("Could not make a statement starting with *"..token.value.."*")
       take()
     end
     if tag("EOF") or peek("EOF") then break end
@@ -209,6 +271,7 @@ end
 
 ------------------------------------------------------------------- testing
 -- create an abstract syntax node
+-- TODO a display function to print s-expression. and for tokens, too
 function node(tag, value) return {tag=tag, value=value} end
 
 -- abstract syntax
@@ -225,6 +288,13 @@ math.randomseed(os.time())
 function eval(term)
   local tag = term.tag
   local v = term.value
+  -----------------------------------------------------------------------------
+  io.write("(",tag," ")
+  --for _,val in ipairs(v) do
+    --io.write("[",val,"]")
+  --end
+  io.write(")\n")
+  -----------------------------------------------------------------------------
   local nothing = ""
   -- if not v then return nil end -- TODO nec?
   -- ref. randomly pick an element of the list
@@ -275,7 +345,10 @@ end
 
 local statements = parser(lexer())
 for _,s in ipairs(statements) do
-  print(eval(s))
+  r = eval(s)
+  if r then print('> ['..s.tag..'] '..r)
+  else print('> ['..s.tag..']')
+  end
 end
 
 -- use coroutines to set up a producer/consumer model for the lexer and the
