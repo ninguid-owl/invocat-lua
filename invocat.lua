@@ -57,11 +57,15 @@ function lexer()
   local whitespace = new_lex("WHITE", '%s')
 
   return coroutine.create(function()
-    local f = assert(io.open(arg[1], "rb"))
+    local next_line = io.read
+    if arg[1] then
+      local f = assert(io.open(arg[1], "rb"))
+      next_line = function () return f:read() end
+    end
     local linenum = 0
-    while true do
+    local line = next_line()
+    while line do
       -- for each line
-      local line = f:read(); if not line then break end -- TODO end token?
       linenum = linenum + 1
       -- if linenum > 1 then we've read a new line
       if linenum > 1 then send(new_token("NEWLINE", "")) end -- TODO
@@ -86,6 +90,7 @@ function lexer()
         else i = i + 1
         end
       end
+      line = next_line()
     end
   end)
 end
@@ -283,8 +288,26 @@ end
 
 ------------------------------------------------------------------- testing
 -- create an abstract syntax node
--- TODO a display function to print s-expression. and for tokens, too
-function node(tag, value) return {tag=tag, value=value} end
+function node(tag, value)
+  node_tostring = function ()
+    local s = "("..tag.." "
+    if tag == "Ref" or tag == "Lit" then
+      s = s..value
+    elseif tag == "Mix" then
+      for _,item in ipairs(value) do
+        s = s.." "..item.tostring()
+      end
+    elseif tag == "Def" then
+      -- value[1] is name, value[2] is items
+      s = s..value[1].." "
+      for _,item in ipairs(value[2]) do
+        s = s.." "..item.tostring()
+      end
+    end
+    return s..")"
+  end
+  return {tag=tag, value=value, tostring=node_tostring}
+end
 
 -- abstract syntax
 -- constructors
@@ -346,6 +369,18 @@ eval(recurse)
 for i=1,50 do
   -- print(eval(r2))
 end
+--]]
+
+--[[
+print("tostring TEST SECTION------------------")
+local test = def('wizard', {lit("rabbit")})
+print(test.tostring())
+print(recurse.tostring())
+print(deer.tostring()) -- deer
+print(r.tostring()) -- animux
+print(mr.tostring()) -- x
+print(animux.tostring())
+print("END tostring TEST SECTION------------------")
 --]]
 
 function printstate()
