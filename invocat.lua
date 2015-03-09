@@ -52,7 +52,9 @@ function lexer()
   -- create the lexical items
   -- TODO literally in a table and then don't have to check them in the
   -- parse loop
-  local name = new_lex("NAME", '[%a_]+') 
+  -- TODO distinguish NAME from %w. require start with [%a_]?
+  -- also could allow ', -, *, etc in names
+  local name = new_lex("NAME", '[%w_]+')
   local colon = new_lex("COLON", ':') 
   local pipe = new_lex("PIPE", '|') 
   local parenl = new_lex("PARENL", '[(]')
@@ -106,11 +108,11 @@ function parser(lexer)
   local next_token = receive(lexer)
   -- functions to look ahead at and consume tokens from the lexer
   function tag(tag)
-    if token.tag == tag then return true end
+    if token and token.tag == tag then return true end
     return false
   end
   function peek(tag)
-    if next_token.tag == tag then return true end
+    if next_token and next_token.tag == tag then return true end
     return false
   end
   function take()
@@ -269,7 +271,7 @@ function parser(lexer)
       -- print("Could not make a statement starting with *"..token.value.."*")
       take()
     end
-    if tag("EOF") or peek("EOF") then break end
+    if tag("EOF") then break end
   end
   return statements
 end
