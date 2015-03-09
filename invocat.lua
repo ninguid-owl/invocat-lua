@@ -92,6 +92,7 @@ end
 
 -- parse tokens from the lexer
 function parser(lexer)
+  local prev_token = nil
   local token = receive(lexer)
   local next_token = receive(lexer)
   -- functions to look ahead at and consume tokens from the lexer
@@ -104,6 +105,7 @@ function parser(lexer)
     return false
   end
   function take()
+    prev_token = token
     token = next_token
     next_token = receive(lexer) or new_token("EOF")
     return token
@@ -111,15 +113,17 @@ function parser(lexer)
 
   -- functions for the lowest level concrete syntax items
   -- white, ink
-  -- white captures contiguous white space
+  -- white captures contiguous whitespace
+  -- returns the whitespace, the token before the whitespace
   function make_white()
     local s = ""
+    local p = prev_token
     while tag("WHITE") do
       s = s..token.value
       take()
     end
     if s == "" then return nil end
-    return s
+    return s, p
   end
   -- ink captures contiguous black: names and punctuation
   function make_ink()
@@ -161,7 +165,7 @@ function parser(lexer)
       l = lit(l)
       --print('found a literal followd by ('..l.tag.." "..l.value..")") -- TODO
     end
-    print('lit *'..l.value..'*')
+    --print('lit *'..l.value..'*') -- TODO
     return l
   end
 
@@ -177,7 +181,7 @@ function parser(lexer)
         return nil
       end
       take() -- consume right paren
-      print('ref '..r)
+      -- print('ref '..r) -- TODO
     end
     --end
     return r and ref(r) or nil
@@ -198,16 +202,24 @@ function parser(lexer)
     -- how to do that selectively?
     -- another (adj) festival
     -- a ref next to a lit, or vice versa, -> keep the white between
-    make_white()
+    local w, previous = make_white()
 
     -- if an item is followed by a newline or EOF, then that's it
     -- otherwise, it's followed by another item
     if tag("NEWLINE") or tag("EOF") then
       return i
     else
-      --print('found a ref or lit, then ('..i.tag.." "..i.value..")") -- TODO
       local item = make_Item()
-      if item then return mix(i, item) else return i end
+      if item then
+        -- if we saw a ) before this item then keep the whitespace as a literal
+        if previous and previous.tag == "PARENR" then
+          local ws = lit(w)
+          i = mix(i, ws)
+        end
+        return mix(i, item)
+      else
+        return i
+      end
     end
   end
 
@@ -220,20 +232,22 @@ function parser(lexer)
     end
     local items = {i}
     while tag("PIPE") do
+      -- match | and consume whitespace
       take()
+      make_white()
       local item = make_Item()
       if not item then
-        --print("Error making itemlist: could not find item")
-        return nil
+        print("Error making itemlist: could not find item")
+      else
+        items[#items+1] = item
       end
-      items[#items+1] = item
     end
+    return items
   end
 
   -- return a List
   function make_List()
     if not peek("COLON") then
-      print('in make_List, we have ('..token.tag..'), ('..next_token.tag..' '..next_token.value..')')
       return nil
     end
     local name = make_name()
@@ -245,7 +259,6 @@ function parser(lexer)
     take()
     make_white()
     local items = make_itemlist()
-    print('def '..name)
     return def(name, items)
   end
 
@@ -260,11 +273,10 @@ function parser(lexer)
       statements[#statements+1] = s
     else
       -- consume whitespace or whatever it is
-      --print("Could not make a statement starting with *"..token.value.."*")
+      -- print("Could not make a statement starting with *"..token.value.."*")
       take()
     end
     if tag("EOF") or peek("EOF") then break end
-    --io.write("(", token.tag, " ", token.value, ")", "\n")
   end
   return statements
 end
@@ -288,13 +300,6 @@ math.randomseed(os.time())
 function eval(term)
   local tag = term.tag
   local v = term.value
-  -----------------------------------------------------------------------------
-  io.write("(",tag," ")
-  --for _,val in ipairs(v) do
-    --io.write("[",val,"]")
-  --end
-  io.write(")\n")
-  -----------------------------------------------------------------------------
   local nothing = ""
   -- if not v then return nil end -- TODO nec?
   -- ref. randomly pick an element of the list
@@ -315,7 +320,6 @@ function eval(term)
     local name = v[1]
     local list = v[2]
     state[name] = list
-    -- return ???
   end
 end
 
@@ -336,18 +340,28 @@ local recurse_list = {mr, mr, l}
 local animux = def('animux', animux_list)
 local recurse = def('recurse', recurse_list)
 
+--[[
 eval(animux)
 eval(recurse)
 for i=1,50 do
   -- print(eval(r2))
 end
+--]]
 
+function printstate()
+  io.write('{')
+  for k,v in pairs(state) do io.write(k,', ') end
+  io.write('}\n')
+end
 
 local statements = parser(lexer())
+printstate() -- TODO
 for _,s in ipairs(statements) do
   r = eval(s)
   if r then print('> ['..s.tag..'] '..r)
-  else print('> ['..s.tag..']')
+  else
+    io.write('> [',s.tag,'] ')
+    printstate()
   end
 end
 
