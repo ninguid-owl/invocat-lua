@@ -1,5 +1,11 @@
 #! /usr/local/bin/lua
--- a lexer ...
+-- a lexer, parser, and interpreter for invocat
+
+-- the lexer and parser follow a producer/consumer pattern.
+-- the lexer reads input (file or standard in) and returns tokens,
+-- which are tables that have tag and value fields.
+-- the parser requests tokens from the lexer and creates abstract syntax
+-- nodes, which are formed into statements, which are ultimately evaluated.
 
 -- utility functions for working with coroutines
 function receive(producer)
@@ -51,9 +57,8 @@ function lexer()
   local pipe = new_lex("PIPE", '|') 
   local parenl = new_lex("PARENL", '[(]')
   local parenr = new_lex("PARENR", '[)]')
-  --local _literal = new_lex("_LITERAL", '"[^"]*"') -- TODO this is fake
   local comment = new_lex("COMMENT", '[-][-].*$')
-  local punctuation = new_lex("PUNCT", '%p') -- TODO all punct! check late
+  local punctuation = new_lex("PUNCT", '%p')
   local whitespace = new_lex("WHITE", '%s')
 
   return coroutine.create(function()
@@ -80,7 +85,6 @@ function lexer()
                     or pipe(line, i)
                     or parenl(line, i)
                     or parenr(line, i)
-                    --or _literal(line, i)
                     or comment(line, i)
                     or punctuation(line, i)
                     or whitespace(line, i)
@@ -140,7 +144,6 @@ function parser(lexer)
     if s == "" then return nil end
     return s
   end
-
   -- name
   function make_name()
     local s = ""
@@ -153,29 +156,24 @@ function parser(lexer)
   end
 
   -- literal is ink [white literal]
-  -- returns a Lit
+  -- returns a Lit abstract syntax node or nil
   function make_literal(r)
     local l = make_ink()
     -- if we can't build up the literal, return what have so far
     if not l then return r end
     -- if we passed anything in recursively, then build on that
-    --if r then for k,v in pairs(r) do print("r "..k.." "..v) end end -- TODO
     l = r and r.value..l or l
     local w = make_white()
-    -- TODO parenl?
     if w and (tag("NAME") or tag("PUNCT") or tag("PARENL")) then
       l = lit(l..w)
       l = make_literal(l)
     else
       l = lit(l)
-      --print('found a literal followd by ('..l.tag.." "..l.value..")") -- TODO
     end
-    --print('lit *'..l.value..'*') -- TODO
     return l
   end
-
   -- reference is (name)
-  -- returns a Ref
+  -- returns a Ref abstract syntax node or nil
   function make_reference()
     local r = nil
     if tag("PARENL") and peek("NAME") then
@@ -186,14 +184,11 @@ function parser(lexer)
         return nil
       end
       take() -- consume right paren
-      -- print('ref '..r) -- TODO
     end
-    --end
     return r and ref(r) or nil
   end
-
   -- an item is a reference, literal, or mix of items
-  -- returns Ref, Lit, or Mix
+  -- returns Ref, Lit, or Mix abstract syntax node
   function make_Item()
     local i = nil
     -- ref or lit
@@ -202,13 +197,8 @@ function parser(lexer)
       --print("Error making item: could not find literal or reference")
       return nil
     end
-
-    -- TODO ignore whitespace between items ?
-    -- how to do that selectively?
-    -- another (adj) festival
-    -- a ref next to a lit, or vice versa, -> keep the white between
+    -- whitespace between items is sometimes significant
     local w, previous = make_white()
-
     -- if an item is followed by a newline or EOF, then that's it
     -- otherwise, it's followed by another item
     if tag("NEWLINE") or tag("EOF") then
@@ -227,7 +217,6 @@ function parser(lexer)
       end
     end
   end
-
   -- itemlist
   function make_itemlist()
     local i = make_Item()
@@ -249,8 +238,8 @@ function parser(lexer)
     end
     return items
   end
-
-  -- return a List
+  -- a List is a definition
+  -- returns a Def abstract sytnax node or nil
   function make_List()
     if not peek("COLON") then
       return nil
@@ -260,13 +249,12 @@ function parser(lexer)
       --print("Error making List: could not find NAME")
       return nil
     end
-    -- match : and then consume whitespace -- TODO
+    -- match : and then consume whitespace
     take()
     make_white()
     local items = make_itemlist()
     return def(name, items)
   end
-
 
   -- parse the token stream and built a list of statements
   local statements = {}
@@ -277,7 +265,7 @@ function parser(lexer)
     if s then
       statements[#statements+1] = s
     else
-      -- consume whitespace or whatever it is
+      -- consume whatever it is
       -- print("Could not make a statement starting with *"..token.value.."*")
       take()
     end
@@ -324,12 +312,11 @@ function eval(term)
   local tag = term.tag
   local v = term.value
   local nothing = ""
-  -- if not v then return nil end -- TODO nec?
   -- ref. randomly pick an element of the list
   if tag == "Ref" then
     local name = v
     local list = state[name] or {} -- undefined names => {}
-    if #list == 0 then return nothing end -- TODO test
+    if #list == 0 then return nothing end
     return eval(list[math.random(#list)])
   -- lit. eval to itself
   elseif tag == "Lit" then
@@ -339,6 +326,7 @@ function eval(term)
     local t1 = eval(v[1]) -- or nothing
     local t2 = eval(v[2]) -- or nothing
     return t1..t2
+  -- def. update state with the list
   elseif tag == "Def" then
     local name = v[1]
     local list = v[2]
@@ -347,6 +335,8 @@ function eval(term)
 end
 
 -- tests
+--[[
+-- abstract syntax nodes
 local dog = lit('dog')
 local cat = lit('cat')
 local bear = lit('bear')
@@ -363,7 +353,6 @@ local recurse_list = {mr, mr, l}
 local animux = def('animux', animux_list)
 local recurse = def('recurse', recurse_list)
 
---[[
 eval(animux)
 eval(recurse)
 for i=1,50 do
@@ -390,7 +379,7 @@ function printstate()
 end
 
 local statements = parser(lexer())
-printstate() -- TODO
+printstate()
 for _,s in ipairs(statements) do
   r = eval(s)
   if r then print('> ['..s.tag..'] '..r)
@@ -399,13 +388,3 @@ for _,s in ipairs(statements) do
     printstate()
   end
 end
-
--- use coroutines to set up a producer/consumer model for the lexer and the
--- parser
--- the lexer reads input and returns tokens, which 
--- are tables that have tag and value fields (and others?)
--- the parser requests tokens from the lexer and builds an AST
--- TODO how is the AST represented here?
--- i think once the lexer returns an end of program token then the parser
--- finalizes the AST
--- finally, we evaluate the AST
