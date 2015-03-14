@@ -7,6 +7,7 @@ Statement ::= List
 List ::= Def name [Item]
 
 Item ::= Ref name
+         Res name
          Lit literal
          Mix Item Item
 
@@ -23,6 +24,8 @@ definition ::= name ':' itemlist
 
 reference ::= '(' name ')'
 
+resolution ::= '[' name ']'
+
 itemlist ::=
   item '|' itemlist
   item
@@ -30,8 +33,10 @@ itemlist ::=
 item ::=
   literal item
   reference item
+  resolution item
   literal
   reference
+  resolution
 
 literal ::=
   ink white literal
