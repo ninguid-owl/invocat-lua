@@ -51,7 +51,7 @@ function lexer()
 
   -- create the lexical items
   local lex_items = {
-    new_lex("NAME", '[%a_]+'),
+    new_lex("NAME", '[%w_]+'),
     new_lex("COLON", ':'),
     new_lex("PIPE", '|'),
     new_lex("PARENL", '[(]'),
