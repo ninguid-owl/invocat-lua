@@ -50,18 +50,18 @@ function lexer()
   end
 
   -- create the lexical items
-  -- TODO literally in a table and then don't have to check them in the
-  -- parse loop
-  -- TODO distinguish NAME from %w. require start with [%a_]?
-  -- also could allow ', -, *, etc in names
-  local name = new_lex("NAME", '[%w_]+')
-  local colon = new_lex("COLON", ':') 
-  local pipe = new_lex("PIPE", '|') 
-  local parenl = new_lex("PARENL", '[(]')
-  local parenr = new_lex("PARENR", '[)]')
-  local comment = new_lex("COMMENT", '[-][-].*$')
-  local punctuation = new_lex("PUNCT", '%p')
-  local whitespace = new_lex("WHITE", '%s')
+  local lex_items = {
+    new_lex("NAME", '[%a_]+'),
+    new_lex("COLON", ':'),
+    new_lex("PIPE", '|'),
+    new_lex("PARENL", '[(]'),
+    new_lex("PARENR", '[)]'),
+    new_lex("BRACKL", '%['),
+    new_lex("BRACKR", '%]'),
+    new_lex("COMMENT", '[-][-].*$'),
+    new_lex("PUNCT", '%p'),
+    new_lex("WHITE", '%s'),
+  }
 
   return coroutine.create(function()
     local next_line = io.read
@@ -79,22 +79,17 @@ function lexer()
       io.write("\t\t", ("%5d "):format(linenum), line, "\n")
 
       -- start at index 1 and try to match patterns
-      -- if no match, increment the index by 1
       local i = 1
       while i <= line:len() do
-        local match = name(line, i)
-                    or colon(line, i)
-                    or pipe(line, i)
-                    or parenl(line, i)
-                    or parenr(line, i)
-                    or comment(line, i)
-                    or punctuation(line, i)
-                    or whitespace(line, i)
-        if match then
-          send(match)
-          i = i + match.length
-        else i = i + 1
+        for _,f in ipairs(lex_items) do
+          local match = f(line, i)
+          if match then
+            send(match)
+            i = i + match.length-1
+            break
+          end
         end
+        i = i + 1
       end
       line = next_line()
     end
