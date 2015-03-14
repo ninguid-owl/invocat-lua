@@ -1,0 +1,16 @@
+-- eval to nothing leaves an extra space. (as expected)
+
+-- definitions
+adj: old | fell | gleaming | sharp | frosty | warm | dark | (nothing)
+weapon: sword | axe | hand and a half sword | staff
+material: iron | star iron |     silver       -- spaces afore and after silver
+location: in the ruins | in the reflecting pool | in the forest mirk
+treasure: a (adj) (weapon) of (material), found (location).    -- spaces trail
+
+-- output
+*(treasure)*
+*(treasure)*
+*(treasure)*
+*(treasure)*
+*(treasure)*
+
