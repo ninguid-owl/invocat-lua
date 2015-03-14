@@ -1,0 +1,35 @@
+-- defined lists
+x: x
+x (x)
+
+-- undefined lists
+there is nothing *(nothing)*
+
+-- adjacent lists
+color: mazarine | cochineal
+piece: scarf | hat
+a (color) (piece), to keep warm.
+
+-- identification of literals
+-- handling of significant whitespace
+literals: (x) 1 | (x)(x)   2 xs    | (x)(x)(x) 3 xs, even    -- spaces trail
+literals are handled correctly *(literals)*
+
+-- escaping chararacters (automatically where possible)
+-- ...
+
+-- empty list items
+blanks: (nothing) | something
+catch anything? *(blanks)*
+
+-- recursive defs
+lr: x(lr) | x
+rr: x | x(rr)
+astar: a(astar) | (nothing)
+x+ (lr)
+x+ (rr)
+a* (astar)
+
+-- numbers?
+814
+814-455 something something
