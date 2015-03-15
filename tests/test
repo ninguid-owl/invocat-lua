@@ -52,6 +52,12 @@ b: it is sometimes necessary \
         to break long lines
 (b)
 
+-- indentation. leading whitespace is not significant
+  this should not show as indented!     \
+  and this is on the same line, but with sig. space \
+  after 'indented!'.
+
 -- double dash can be used as an em-dash if there is no space after it
 d: Some years ago--never mind how long precisely--having little
 (d)
+
