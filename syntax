@@ -2,12 +2,14 @@ Abstract Syntax
 ---------------
 
 Statement ::= List
+              Hold
               Item
 
 List ::= Def name [Item]
 
+Hold ::= Res name [Item]
+
 Item ::= Ref name
-         Res name
          Lit literal
          Mix Item Item
 
@@ -18,13 +20,14 @@ Concrete Syntax
 
 statement ::=
   definition
+  resolution
   item
 
 definition ::= name ':' itemlist
 
-reference ::= '(' name ')'
+resolution ::= name '<-' itemlist
 
-resolution ::= '[' name ']'
+reference ::= '(' name ')'
 
 itemlist ::=
   item '|' itemlist
@@ -33,10 +36,8 @@ itemlist ::=
 item ::=
   literal item
   reference item
-  resolution item
   literal
   reference
-  resolution
 
 literal ::=
   ink white literal
