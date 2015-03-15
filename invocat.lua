@@ -103,8 +103,12 @@ function parser(lexer)
   local token = receive(lexer)
   local next_token = receive(lexer)
   -- functions to look ahead at and consume tokens from the lexer
-  function tag(tag)
-    if token and token.tag == tag then return true end
+  function tag(...)
+    if token then
+      for _,t in ipairs({...}) do
+        if token.tag == t then return true end
+      end
+    end
     return false
   end
   function peek(tag)
@@ -125,10 +129,10 @@ function parser(lexer)
   function make_white()
     local s = ""
     local p = prev_token
-    while tag("WHITE") or tag("BREAK") do
+    while tag("WHITE", "BREAK") do
       if tag("BREAK") then
         -- consume newlines, breaks, and all leading whitespace
-        while tag("WHITE") or tag("BREAK") or tag("NEWLINE") do
+        while tag("WHITE", "BREAK", "NEWLINE") do
           take()
         end
       elseif tag("WHITE") then
@@ -143,7 +147,7 @@ function parser(lexer)
   -- the parser has no trouble with colons inside ink
   function make_ink()
     local s = ""
-    while tag("NAME") or tag("PUNCT") or tag("COLON") or tag("ESCAPE") do
+    while tag("NAME", "PUNCT", "COLON", "ESCAPE") do
       s = s..token.value
       take()
     end
@@ -172,9 +176,7 @@ function parser(lexer)
     local w = make_white()
     -- when formulating a literal, keep whitespace at the end if the
     -- the next token is something special
-    if w and (tag("NAME") or tag("PUNCT")
-                          or tag("PARENL")
-                          or tag("ESCAPE")) then
+    if w and tag("NAME", "PUNCT", "PARENL", "ESCAPE") then
       l = lit(l..w)
       l = make_literal(l)
     else
@@ -212,9 +214,6 @@ function parser(lexer)
     take()
     make_white()
     local items = make_itemlist()
-    for _,i in ipairs(items) do
-      print(i)
-    end
     return res(name, items)
   end
   -- an item is a reference, literal, or mix of items
@@ -231,7 +230,7 @@ function parser(lexer)
     local w, previous = make_white()
     -- if an item is followed by a newline or EOF, then that's it
     -- otherwise, it's followed by another item
-    if tag("NEWLINE") or tag("EOF") then
+    if tag("NEWLINE", "EOF") then
       return i
     else
       local item = make_Item()
