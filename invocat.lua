@@ -292,36 +292,41 @@ end
 
 ------------------------------------------------------------------- testing
 -- create an abstract syntax node
-function node(tag, value)
-  node_tostring = function ()
-    local s = "("..tag.." "
-    if tag == "Ref" or tag == "Res" or tag == "Lit" then
-      s = s..value
-    elseif tag == "Mix" then
-      for _,item in ipairs(value) do
-        s = s.." "..item.tostring()
-      end
-    elseif tag == "Def" then
-      -- value[1] is name, value[2] is items
-      s = s..value[1].." "
-      for _,item in ipairs(value[2]) do
-        s = s.." "..item.tostring()
-      end
-    end
-    return s..")"
-  end
-  return {tag=tag, value=value, tostring=node_tostring}
+Node = {}
+local mt = {}
+function Node.new(tag, value)
+  local node = {tag=tag, value=value}
+  setmetatable(node, mt)
+  return node
 end
+function Node.tostring(n)
+  local s = "("..n.tag.." "
+  if n.tag == "Ref" or n.tag == "Res" or n.tag == "Lit" then
+    s = s..n.value
+  elseif n.tag == "Mix" then
+    for _,item in ipairs(n.value) do
+      s = s.." "..Node.tostring(item)
+    end
+  elseif n.tag == "Def" then
+    -- n.value[1] is name, n.value[2] is items
+    s = s..n.value[1].." "
+    for _,item in ipairs(n.value[2]) do
+      s = s.." "..Node.tostring(item)
+    end
+  end
+  return s..")"
+end
+mt.__tostring = Node.tostring
 
 -- abstract syntax
 -- constructors
 -- List
-function def(name, items) return node("Def", {name, items}) end
+function def(name, items) return Node.new("Def", {name, items}) end
 -- Item
-function ref(name) return node("Ref", name) end
-function res(name) return node("Res", name) end
-function lit(literal) return node("Lit", literal) end
-function mix(item1, item2) return node("Mix", {item1, item2}) end
+function ref(name) return Node.new("Ref", name) end
+function res(name) return Node.new("Res", name) end
+function lit(literal) return Node.new("Lit", literal) end
+function mix(item1, item2) return Node.new("Mix", {item1, item2}) end
 
 state = {}
 math.randomseed(os.time())
@@ -376,7 +381,7 @@ function subst(term)
 end
 
 -- tests
---[[
+---[[
 -- abstract syntax nodes
 local dog = lit('dog')
 local cat = lit('cat')
@@ -404,12 +409,12 @@ end
 --[[
 print("tostring TEST SECTION------------------")
 local test = def('wizard', {lit("rabbit")})
-print(test.tostring())
-print(recurse.tostring())
-print(deer.tostring()) -- deer
-print(r.tostring()) -- animux
-print(mr.tostring()) -- x
-print(animux.tostring())
+print(test)
+print(recurse)
+print(deer) -- deer
+print(r) -- animux
+print(mr) -- x
+print(animux)
 print("END tostring TEST SECTION------------------")
 --]]
 
