@@ -1,53 +1,44 @@
 Abstract Syntax
 ---------------
+[A] denotes a list of A.
 
 Statement ::= List
-              Hold
-              Item
+            | Hold
+            | Item
 
 List ::= Def name [Item]
 
 Hold ::= Res name [Item]
 
 Item ::= Ref name
-         Lit literal
-         Mix Item Item
+       | Lit literal
+       | Mix Item Item
 
 
 
 Concrete Syntax
 ---------------
+EBNF: {A} denotes 0 or more As.
 
-statement ::=
-  definition
-  resolution
-  item
+statement ::= definition
+            | resolution
+            | item
 
 definition ::= name ':' itemlist
 
 resolution ::= name '<-' itemlist
 
+itemlist ::= item {'|' itemlist}
+
+item ::= literal {item}
+       | reference {item}
+
 reference ::= '(' name ')'
 
-itemlist ::=
-  item '|' itemlist
-  item
+literal ::= ink {white literal}
 
-item ::=
-  literal item
-  reference item
-  literal
-  reference
-
-literal ::=
-  ink white literal
-  ink
-
-ink ::=
-  name ink
-  punct ink
-  name
-  punct
+ink ::= name {ink}
+      | punct {ink}
 
 
 
