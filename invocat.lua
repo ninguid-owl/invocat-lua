@@ -161,7 +161,11 @@ function parser(lexer)
     -- if we passed anything in recursively, then build on that
     l = r and r.value..l or l
     local w = make_white()
-    if w and (tag("NAME") or tag("PUNCT") or tag("PARENL")) then
+    -- when formulating a literal, keep whitespace at the end if the
+    -- the next token is something special
+    if w and (tag("NAME") or tag("PUNCT")
+                          or tag("PARENL")
+                          or tag("BRACKL")) then
       l = lit(l..w)
       l = make_literal(l)
     else
@@ -184,12 +188,27 @@ function parser(lexer)
     end
     return r and ref(r) or nil
   end
+  -- resolution is [name]
+  -- returns a Res abstract syntax node or nil
+  function make_resolution()
+    local r = nil
+    if tag("BRACKL") and peek("NAME") then
+      take() -- consume left paren
+      r = make_name()
+      if not tag("BRACKR") then
+        print("Error. Expecting ']' and found "..token.value)
+        return nil
+      end
+      take() -- consume right paren
+    end
+    return r and res(r) or nil
+  end
   -- an item is a reference, literal, or mix of items
   -- returns Ref, Lit, or Mix abstract syntax node
   function make_Item()
     local i = nil
-    -- ref or lit
-    i = make_reference() or make_literal()
+    -- ref or res or lit
+    i = make_reference() or make_resolution() or make_literal()
     if not i then
       --print("Error making item: could not find literal or reference")
       return nil
@@ -276,7 +295,7 @@ end
 function node(tag, value)
   node_tostring = function ()
     local s = "("..tag.." "
-    if tag == "Ref" or tag == "Lit" then
+    if tag == "Ref" or tag == "Res" or tag == "Lit" then
       s = s..value
     elseif tag == "Mix" then
       for _,item in ipairs(value) do
@@ -300,6 +319,7 @@ end
 function def(name, items) return node("Def", {name, items}) end
 -- Item
 function ref(name) return node("Ref", name) end
+function res(name) return node("Res", name) end
 function lit(literal) return node("Lit", literal) end
 function mix(item1, item2) return node("Mix", {item1, item2}) end
 
@@ -310,7 +330,8 @@ function eval(term)
   local v = term.value
   local nothing = ""
   -- ref. randomly pick an element of the list
-  if tag == "Ref" then
+  -- res acts like ref at the top lvl of the file
+  if tag == "Ref" or tag == "Res" then
     local name = v
     local list = state[name] or {} -- undefined names => {}
     if #list == 0 then return nothing end
@@ -327,7 +348,30 @@ function eval(term)
   elseif tag == "Def" then
     local name = v[1]
     local list = v[2]
+    -- resolve any Resolutions into literals
+    list = resolve(list)
     state[name] = list
+  end
+end
+
+-- take a list of terms and replace each instance of a res with a lit
+-- which is essentially fixing its evaluation
+function resolve(terms)
+  result = {}
+  for i,t in ipairs(terms) do
+    result[i] = subst(t)
+  end
+  return result
+end
+
+function subst(term)
+  if term.tag == "Res" then
+    -- since a res behaves like a ref at the top lvl
+    return lit(eval(term))
+  elseif term.tag == "Mix" then
+    return mix(subst(term.value[1]), subst(term.value[2]))
+  else
+    return term
   end
 end
 
