@@ -8,7 +8,7 @@
 -- TODO: escape our key separator character: _
 
 local RANDOM_START = false
-local pattern =  "%w+"
+local pattern =  "%S+"
 
 function allwords ()
   local next_line = io.read

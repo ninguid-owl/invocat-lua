@@ -34,6 +34,7 @@ function lexer()
   -- and produces a token / executes f
   function new_lex(tag, pattern)
     local f = function(content)
+      -- TODO: rm
       --io.write("(", tag, " ", content, ")", "\n")
       return new_token(tag, content)
     end
@@ -51,7 +52,9 @@ function lexer()
 
   -- create the lexical items
   local lex_items = {
-    new_lex("NAME", '[%w_]+'),
+    new_lex("COMMENT", '[-][-]%s+.*$'),
+    -- allow certain punctuation in names
+    new_lex("NAME", '[%w_%-!\'?.,;]+'),
     new_lex("COLON", ':'),
     new_lex("PIPE", '|'),
     new_lex("ESCAPE", '\\[n()]'),
@@ -59,7 +62,6 @@ function lexer()
     new_lex("PARENL", '[(]'),
     new_lex("PARENR", '[)]'),
     new_lex("LARROW", '%s?<[-]'),
-    new_lex("COMMENT", '[-][-]%s+.*$'),
     new_lex("PUNCT", '%p'),
     new_lex("WHITE", '%s'),
   }
@@ -77,7 +79,8 @@ function lexer()
       linenum = linenum + 1
       -- if linenum > 1 then we've read a new line
       if linenum > 1 then send(new_token("NEWLINE", "")) end -- TODO
-      io.write("\t\t", ("%5d "):format(linenum), line, "\n")
+      --TODO: rm
+      --io.write("\t\t", ("%5d "):format(linenum), line, "\n")
 
       -- start at index 1 and try to match patterns
       local i = 1
@@ -423,12 +426,14 @@ function printstate()
 end
 
 local statements = parser(lexer())
-printstate()
+-- TODO: rm
+--printstate()
 for _,s in ipairs(statements) do
   r = eval(s)
   if r then print('> ['..s.tag..'] '..r)
   else
-    io.write('> [',s.tag,'] ')
-    printstate()
+    -- TODO: rm
+    --io.write('> [',s.tag,'] ')
+    --printstate()
   end
 end
