@@ -33,3 +33,12 @@ a* (astar)
 -- numbers?
 814
 814-455 something something
+
+-- holds fix the evaluation
+h <- a (color) (piece), to keep warm.
+(h)
+(h) -- will be the same as above
+-- redefining h may yield a new evalutaion
+h <- a (color) (piece), to keep warm.
+(h)
+(h)

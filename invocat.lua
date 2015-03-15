@@ -56,8 +56,7 @@ function lexer()
     new_lex("PIPE", '|'),
     new_lex("PARENL", '[(]'),
     new_lex("PARENR", '[)]'),
-    new_lex("BRACKL", '%['),
-    new_lex("BRACKR", '%]'),
+    new_lex("LARROW", '%s?<[-]'),
     new_lex("COMMENT", '[-][-].*$'),
     new_lex("PUNCT", '%p'),
     new_lex("WHITE", '%s'),
@@ -164,8 +163,7 @@ function parser(lexer)
     -- when formulating a literal, keep whitespace at the end if the
     -- the next token is something special
     if w and (tag("NAME") or tag("PUNCT")
-                          or tag("PARENL")
-                          or tag("BRACKL")) then
+                          or tag("PARENL")) then
       l = lit(l..w)
       l = make_literal(l)
     else
@@ -188,27 +186,32 @@ function parser(lexer)
     end
     return r and ref(r) or nil
   end
-  -- resolution is [name]
+  -- resolution is name <- itemlist
   -- returns a Res abstract syntax node or nil
-  function make_resolution()
-    local r = nil
-    if tag("BRACKL") and peek("NAME") then
-      take() -- consume left paren
-      r = make_name()
-      if not tag("BRACKR") then
-        print("Error. Expecting ']' and found "..token.value)
-        return nil
-      end
-      take() -- consume right paren
+  function make_Hold()
+    if not peek("LARROW") then
+      return nil
     end
-    return r and res(r) or nil
+    local name = make_name()
+    if not name then
+      --print("Error making Res: could not find NAME")
+      return nil
+    end
+    -- match : and then consume whitespace
+    take()
+    make_white()
+    local items = make_itemlist()
+    for _,i in ipairs(items) do
+      print(i)
+    end
+    return res(name, items)
   end
   -- an item is a reference, literal, or mix of items
   -- returns Ref, Lit, or Mix abstract syntax node
   function make_Item()
     local i = nil
-    -- ref or res or lit
-    i = make_reference() or make_resolution() or make_literal()
+    -- ref or lit
+    i = make_reference() or make_literal()
     if not i then
       --print("Error making item: could not find literal or reference")
       return nil
@@ -277,7 +280,7 @@ function parser(lexer)
   while token do
     -- a statement is a list definition or an item
     -- TODO or maybe just whitespace
-    local s = make_List() or make_Item()
+    local s = make_List() or make_Hold() or make_Item()
     if s then
       statements[#statements+1] = s
     else
@@ -324,9 +327,10 @@ mt.__tostring = Node.tostring
 function def(name, items) return Node.new("Def", {name, items}) end
 -- Item
 function ref(name) return Node.new("Ref", name) end
-function res(name) return Node.new("Res", name) end
 function lit(literal) return Node.new("Lit", literal) end
 function mix(item1, item2) return Node.new("Mix", {item1, item2}) end
+-- Hold
+function res(name, items) return Node.new("Res", {name, items}) end
 
 state = {}
 math.randomseed(os.time())
@@ -335,12 +339,17 @@ function eval(term)
   local v = term.value
   local nothing = ""
   -- ref. randomly pick an element of the list
-  -- res acts like ref at the top lvl of the file
-  if tag == "Ref" or tag == "Res" then
+  if tag == "Ref" then
     local name = v
     local list = state[name] or {} -- undefined names => {}
     if #list == 0 then return nothing end
     return eval(list[math.random(#list)])
+  -- res populates the state table by evaluating something from the item list
+  elseif tag == "Res" then
+    local name = v[1]
+    local list = v[2]
+    if #list == 0 then return nothing end
+    state[name] = {lit(eval(list[math.random(#list)]))}
   -- lit. eval to itself
   elseif tag == "Lit" then
     return v or nothing
@@ -353,30 +362,7 @@ function eval(term)
   elseif tag == "Def" then
     local name = v[1]
     local list = v[2]
-    -- resolve any Resolutions into literals
-    list = resolve(list)
     state[name] = list
-  end
-end
-
--- take a list of terms and replace each instance of a res with a lit
--- which is essentially fixing its evaluation
-function resolve(terms)
-  result = {}
-  for i,t in ipairs(terms) do
-    result[i] = subst(t)
-  end
-  return result
-end
-
-function subst(term)
-  if term.tag == "Res" then
-    -- since a res behaves like a ref at the top lvl
-    return lit(eval(term))
-  elseif term.tag == "Mix" then
-    return mix(subst(term.value[1]), subst(term.value[2]))
-  else
-    return term
   end
 end
 
