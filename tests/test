@@ -42,3 +42,7 @@ h <- a (color) (piece), to keep warm.
 h <- a (color) (piece), to keep warm.
 (h)
 (h)
+
+-- escape characters
+a: this is how you would call a list: \(a\) \nand this goes to a new line
+(a)

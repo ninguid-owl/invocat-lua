@@ -39,6 +39,11 @@ literal ::= ink {white literal}
 
 ink ::= name {ink}
       | punct {ink}
+      | escape {ink}
+
+escape ::= '\('
+         | '\)'
+         | '\n'
 
 
 

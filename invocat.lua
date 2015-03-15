@@ -54,6 +54,7 @@ function lexer()
     new_lex("NAME", '[%w_]+'),
     new_lex("COLON", ':'),
     new_lex("PIPE", '|'),
+    new_lex("ESCAPE", '\\[n()]'),
     new_lex("PARENL", '[(]'),
     new_lex("PARENR", '[)]'),
     new_lex("LARROW", '%s?<[-]'),
@@ -133,7 +134,7 @@ function parser(lexer)
   -- ink captures contiguous black: names and punctuation
   function make_ink()
     local s = ""
-    while tag("NAME") or tag("PUNCT") do
+    while tag("NAME") or tag("PUNCT") or tag("COLON") or tag("ESCAPE") do
       s = s..token.value
       take()
     end
@@ -163,7 +164,8 @@ function parser(lexer)
     -- when formulating a literal, keep whitespace at the end if the
     -- the next token is something special
     if w and (tag("NAME") or tag("PUNCT")
-                          or tag("PARENL")) then
+                          or tag("PARENL")
+                          or tag("ESCAPE")) then
       l = lit(l..w)
       l = make_literal(l)
     else
@@ -352,6 +354,8 @@ function eval(term)
     state[name] = {lit(eval(list[math.random(#list)]))}
   -- lit. eval to itself
   elseif tag == "Lit" then
+    v = v:gsub("\\n", "\n")
+    v = v:gsub("\\", "")
     return v or nothing
   -- mix. eval to evaluation of the two items
   elseif tag == "Mix" then
@@ -385,8 +389,8 @@ local recurse_list = {mr, mr, l}
 local animux = def('animux', animux_list)
 local recurse = def('recurse', recurse_list)
 
-eval(animux)
-eval(recurse)
+--eval(animux)
+--eval(recurse)
 for i=1,50 do
   -- print(eval(r2))
 end
