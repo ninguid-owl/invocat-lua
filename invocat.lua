@@ -55,6 +55,7 @@ function lexer()
     new_lex("COLON", ':'),
     new_lex("PIPE", '|'),
     new_lex("ESCAPE", '\\[n()]'),
+    new_lex("BREAK", '\\$'),
     new_lex("PARENL", '[(]'),
     new_lex("PARENR", '[)]'),
     new_lex("LARROW", '%s?<[-]'),
@@ -124,14 +125,22 @@ function parser(lexer)
   function make_white()
     local s = ""
     local p = prev_token
-    while tag("WHITE") do
-      s = s..token.value
-      take()
+    while tag("WHITE") or tag("BREAK") do
+      if tag("BREAK") then
+        -- consume newlines, breaks, and all leading whitespace
+        while tag("WHITE") or tag("BREAK") or tag("NEWLINE") do
+          take()
+        end
+      elseif tag("WHITE") then
+        s = s..token.value
+        take()
+      end
     end
     if s == "" then return nil end
     return s, p
   end
   -- ink captures contiguous black: names and punctuation
+  -- the parser has no trouble with colons inside ink
   function make_ink()
     local s = ""
     while tag("NAME") or tag("PUNCT") or tag("COLON") or tag("ESCAPE") do

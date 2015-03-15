@@ -15,7 +15,7 @@ a (color) (piece), to keep warm.
 literals: (x) 1 | (x)(x)   2 xs    | (x)(x)(x) 3 xs, even    -- spaces trail
 literals are handled correctly *(literals)*
 
--- escaping chararacters (automatically where possible)
+-- escaping characters (automatically where possible)
 -- ...
 
 -- empty list items
@@ -38,7 +38,7 @@ a* (astar)
 h <- a (color) (piece), to keep warm.
 (h)
 (h) -- will be the same as above
--- redefining h may yield a new evalutaion
+-- redefining h may yield a new evaluation
 h <- a (color) (piece), to keep warm.
 (h)
 (h)
@@ -46,3 +46,8 @@ h <- a (color) (piece), to keep warm.
 -- escape characters
 a: this is how you would call a list: \(a\) \nand this goes to a new line
 (a)
+
+-- line breaks. leading whitespace is not significant
+b: it is sometimes necessary \
+        to break long lines
+(b)
