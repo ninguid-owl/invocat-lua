@@ -59,7 +59,7 @@ function lexer()
     new_lex("PARENL", '[(]'),
     new_lex("PARENR", '[)]'),
     new_lex("LARROW", '%s?<[-]'),
-    new_lex("COMMENT", '[-][-].*$'),
+    new_lex("COMMENT", '[-][-]%s+.*$'),
     new_lex("PUNCT", '%p'),
     new_lex("WHITE", '%s'),
   }

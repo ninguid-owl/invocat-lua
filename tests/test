@@ -51,3 +51,7 @@ a: this is how you would call a list: \(a\) \nand this goes to a new line
 b: it is sometimes necessary \
         to break long lines
 (b)
+
+-- double dash can be used as an em-dash if there is no space after it
+d: Some years ago--never mind how long precisely--having little
+(d)
