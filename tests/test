@@ -26,9 +26,11 @@ catch anything? *(blanks)*
 lr: x(lr) | x
 rr: x | x(rr)
 astar: a(astar) | (nothing)
+p: \((p)\) | \(\) -- the language of matched parens
 x+ (lr)
 x+ (rr)
 a* (astar)
+matched parens: (p)
 
 -- numbers?
 814
