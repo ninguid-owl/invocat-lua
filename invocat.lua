@@ -55,7 +55,7 @@ function lexer()
     new_lex("COMMENT", '[-][-]%s+.*$'),
     -- allow certain punctuation in names
     new_lex("NAME", '[%w_%-!\'?.,;]+'),
-    new_lex("COLON", ':'),
+    new_lex("COLON", '%s?:'),
     new_lex("PIPE", '|'),
     new_lex("ESCAPE", '\\[n()]'),
     new_lex("BREAK", '\\$'),

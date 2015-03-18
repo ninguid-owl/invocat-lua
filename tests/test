@@ -74,3 +74,5 @@ b: it is sometimes necessary \
 d: Some years ago--never mind how long precisely--having little
 (d)
 
+-- unicode characters are ignored (not lexed)
+Du thé, s'il vous plaît.

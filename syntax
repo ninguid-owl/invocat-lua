@@ -49,8 +49,16 @@ escape ::= '\('
 
 Lexical Syntax
 --------------
+Defined by regular expressions.
 
-name
-white
-punct
-...
+comment ::= [-][-]\s+.*$
+name ::= [\w-_',.?!]+
+colon ::= \s?[:]
+pipe ::= [|]
+escape ::= \\[n()]
+break ::= \\$
+lparen ::= [(]
+rparen ::= [)]
+larrow ::= \s?[<][-]
+punct ::= \p
+white ::= \s
