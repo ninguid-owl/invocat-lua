@@ -55,13 +55,13 @@ function lexer()
     new_lex("COMMENT", '[-][-]%s+.*$'),
     -- allow certain punctuation in names
     new_lex("NAME", '[%w_%-!\'?.,;]+'),
+    new_lex("LPAREN", '[(]'),
+    new_lex("RPAREN", '[)]'),
     new_lex("COLON", '%s?:'),
+    new_lex("LARROW", '%s?<[-]'),
     new_lex("PIPE", '|'),
     new_lex("ESCAPE", '\\[n()]'),
     new_lex("BREAK", '\\$'),
-    new_lex("PARENL", '[(]'),
-    new_lex("PARENR", '[)]'),
-    new_lex("LARROW", '%s?<[-]'),
     new_lex("PUNCT", '%p'),
     new_lex("WHITE", '%s'),
   }
@@ -179,7 +179,7 @@ function parser(lexer)
     local w = make_white()
     -- when formulating a literal, keep whitespace at the end if the
     -- the next token is something special
-    if w and tag("NAME", "PUNCT", "PARENL", "ESCAPE") then
+    if w and tag("NAME", "PUNCT", "LPAREN", "ESCAPE") then
       l = lit(l..w)
       l = make_literal(l)
     else
@@ -191,10 +191,10 @@ function parser(lexer)
   -- returns a Ref abstract syntax node or nil
   function make_reference()
     local r = nil
-    if tag("PARENL") and peek("NAME") then
+    if tag("LPAREN") and peek("NAME") then
       take() -- consume left paren
       r = make_name()
-      if not tag("PARENR") then
+      if not tag("RPAREN") then
         print("Error. Expecting ')' and found "..token.value)
         return nil
       end
@@ -239,7 +239,7 @@ function parser(lexer)
       local item = make_Item()
       if item then
         -- if we saw a ) before this item then keep the whitespace as a literal
-        if previous and previous.tag == "PARENR" then
+        if previous and previous.tag == "RPAREN" then
           local ws = lit(w)
           i = mix(i, ws)
         end
