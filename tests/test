@@ -74,3 +74,7 @@ it is sometimes necessary \
 
 -- unicode characters are ignored (not lexed)
 Du thé, s'il vous plaît.
+
+-- easily express the infinite!
+-- i: (i)
+-- (i)

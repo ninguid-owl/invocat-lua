@@ -1,3 +1,4 @@
+#!/usr/bin/env lua
 -- a lexer, parser, and interpreter for invocat
 
 -- the lexer and parser follow a producer/consumer pattern.
