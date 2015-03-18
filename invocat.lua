@@ -194,7 +194,7 @@ function parser(lexer)
       take() -- consume left paren
       r = make_name()
       if not tag("RPAREN") then
-        print("Error. Expecting ')' and found "..token.value)
+        --print("Error. Expecting ')' and found "..token.value)
         return nil
       end
       take() -- consume right paren
@@ -262,7 +262,7 @@ function parser(lexer)
       make_white()
       local item = make_Item()
       if not item then
-        print("Error making itemlist: could not find item")
+        --print("Error making itemlist: could not find item")
       else
         items[#items+1] = item
       end
@@ -305,7 +305,6 @@ function parser(lexer)
   return statements
 end
 
-------------------------------------------------------------------- testing
 -- create an abstract syntax node
 Node = {}
 local mt = {}
@@ -380,8 +379,21 @@ function eval(term)
   end
 end
 
+function printstate()
+  io.write('{')
+  for k,v in pairs(state) do io.write(k,', ') end
+  io.write('}\n')
+end
+
+-- invocat!
+local statements = parser(lexer())
+for _,s in ipairs(statements) do
+  r = eval(s)
+  if r then print(r) end
+end
+
 -- tests
----[[
+--[[
 -- abstract syntax nodes
 local dog = lit('dog')
 local cat = lit('cat')
@@ -399,15 +411,16 @@ local recurse_list = {mr, mr, l}
 local animux = def('animux', animux_list)
 local recurse = def('recurse', recurse_list)
 
---eval(animux)
---eval(recurse)
+eval(animux)
+eval(recurse)
 for i=1,50 do
-  -- print(eval(r2))
+  print(eval(r2))
 end
 --]]
 
+-- tostring tests
 --[[
-print("tostring TEST SECTION------------------")
+print("tostring --------")
 local test = def('wizard', {lit("rabbit")})
 print(test)
 print(recurse)
@@ -415,24 +428,5 @@ print(deer) -- deer
 print(r) -- animux
 print(mr) -- x
 print(animux)
-print("END tostring TEST SECTION------------------")
+print("end tostring --------")
 --]]
-
-function printstate()
-  io.write('{')
-  for k,v in pairs(state) do io.write(k,', ') end
-  io.write('}\n')
-end
-
-local statements = parser(lexer())
--- TODO: rm
---printstate()
-for _,s in ipairs(statements) do
-  r = eval(s)
-  if r then print('> ['..s.tag..'] '..r)
-  else
-    -- TODO: rm
-    --io.write('> [',s.tag,'] ')
-    --printstate()
-  end
-end
