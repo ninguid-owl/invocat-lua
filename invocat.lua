@@ -1,4 +1,10 @@
 #!/usr/bin/env lua
+
+-- Invocat: a nondeterministic, generative programming language
+-- by Christopher and Matthew Antoun
+-- at the University of California, Santa Cruz
+-- Copyright 2015
+
 -- a lexer, parser, and interpreter for invocat
 
 -- the lexer and parser follow a producer/consumer pattern.
