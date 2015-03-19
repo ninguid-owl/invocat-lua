@@ -11,9 +11,12 @@ mail: (inorg_armor_adj) (type_mail) of (material_mail), (mail_decoration). |\
       (inorg_armor_adj) (type_mail) of (material_mail), (mail_decoration) \
       and (armor_accessory).
 
-mail_decoration: enamelled (color) | trimmed with fur
+mail_decoration: enamelled (color) | trimmed with fur |\
+                 inscribed with (armor_inscription) |\
+                 etched with (armor_design_engraved)
 
 leather_decoration: stained (color) | trimmed with fur |\
+                    inscribed with (armor_inscription) |\
                     etched with (armor_design_engraved)
 
 org_armor_adj: An old | An ancient | A dark | A warm | A fine | A worn |\
@@ -29,7 +32,7 @@ type_leather: leather shirt | leather coat | leather corslet |\
 type_mail: mail shirt | mail coat | mail hauberk
 
 armor_inscription: a bedouh | a charm | a seal | instructions for warding \
-                   against (creatures) | a recipe for ale | a poem
+                   against (creatures) | an old recipe | a poem
 
 armor_design_engraved: arabesque | falling leaves | tangled vines |\
     flowering vines | a map of stars | a map of a distant land |\
@@ -88,7 +91,7 @@ axe_decoration: The (shape_blade) blade is (decoration_blade) |\
 staff_decoration: It is bound with (material_blade) ferrules |\
   It is bound with a (material_blade) coil |\
   It is bound with rings of (material_fittings) |\
-  It is (decoration_fittings).
+  It is (decoration_fittings)
 
 -- 50% chance of enchantment!
 possibility_enchantment: (nothing) | (enchantment)
