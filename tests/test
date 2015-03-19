@@ -16,7 +16,9 @@ literals: (x) 1 | (x)(x)   2 xs    | (x)(x)(x) 3 xs, even    -- spaces trail
 literals are handled correctly *(literals)*
 
 -- escaping characters (automatically where possible)
--- ...
+-- double dash can be used as an em-dash if there is no space after it
+some years ago--never mind how long precisely--having little
+a literal with something special: a colon
 
 -- empty list items
 blanks: (nothing) | something
@@ -32,11 +34,11 @@ x+ (rr)
 a* (astar)
 matched parens: (p)
 
--- numbers?
+-- numbers
 814
 814-455 something something
 
--- holds fix the evaluation
+-- resolutions fix the evaluation
 h <- a (color) (piece), to keep warm.
 a - (h)
 a - (h) -- will be the same as above
@@ -59,22 +61,16 @@ b - (seq)
 b - (seq)
 
 -- escape characters
-a: this is how you would call a list: \(a\) \nand this goes to a new line
-(a)
+this is how you would call a list: \(a\) \nand this goes to a new line
 
 -- line breaks. leading whitespace is not significant
-b: it is sometimes necessary \
+it is sometimes necessary \
         to break long lines
-(b)
 
 -- indentation. leading whitespace is not significant
   this should not show as indented!     \
   and this is on the same line, but with sig. space \
   after 'indented!'.
-
--- double dash can be used as an em-dash if there is no space after it
-d: Some years ago--never mind how long precisely--having little
-(d)
 
 -- unicode characters are ignored (not lexed)
 Du thé, s'il vous plaît.
