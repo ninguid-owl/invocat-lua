@@ -1,14 +1,11 @@
-#! /usr/local/bin/lua
+#! /usr/bin/env lua
 
 -- Read from standard input or a file and print a Markov data structure in the
 -- form of Invocat definitions. Also print a starting expression to kick off
 -- the generation.
 
--- TODO: escape all invocat speacial chars in original text: :,(,)
--- TODO: escape our key separator character: _
-
-local RANDOM_START = false
-local pattern =  "%S+"
+local RANDOM_START = false    -- begin generation midstream?
+local pattern =  "%S+"        -- take all non-whitespace as a word
 
 function allwords ()
   local next_line = io.read
@@ -34,7 +31,6 @@ function allwords ()
 end
 
 function prefix (w1, w2)
-  -- TODO: temporarily use underscore. Should be space
   return w1 .. "_" .. w2
 end
 
@@ -60,20 +56,16 @@ end
 insert(prefix(w1, w2), NOWORD)
 
 -- print Invocat statements
--- TODO: escape colons parens etc
 print("-- definitions")
 for k,v in pairs(statetab) do
   -- pull the two separate words out of the key
   local idx, w1, w2
-  -- TODO: temporarily use underscore
   idx = k:find("_")
   w1 = k:sub(0, idx)
   w2 = k:sub(idx+1)
-  -- TODO: temporarily use underscore. Should be space
   local val = w2.." ("..w2.."_"..v[1]..")"
   if #v>1 then 
     for i=2,#v do
-      -- TODO: temporarily use underscore. Should be space
       val = val.."|"..w2.." ("..w2.."_"..v[i]..")"
     end
   end
