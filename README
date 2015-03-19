@@ -9,9 +9,10 @@ Contents
 invocat.lua   -- The Invocat lexer, parser, and interpreter.  
 README        -- This file  
 
-test/                 -- Contains a small test suite and sample programs  
+tests/                -- Contains a small test suite and sample programs  
+    test.inv          -- Simple tests
     the-whale.inv     -- Markov example trained on some of Moby Dick  
-    tests.inv         -- Example program  
+    treasure.inv      -- A small treasure generator
 
 misc/
     train-markov.lua  -- Convert an input file to an Invocat Markov chain  
