@@ -1,0 +1,36 @@
+Invocat  
+=======
+A nondeterministic, probabilistic programming language by C & M Antoun.  
+2015-03-18  
+
+
+Contents
+--------
+invocat.lua   -- The Invocat lexer, parser, and interpreter.  
+README        -- This file  
+
+test/                 -- Contains a small test suite and sample programs  
+    the-whale.inv     -- Markov example trained on some of Moby Dick  
+    tests.inv         -- Example program  
+
+misc/
+    train-markov.lua  -- Convert an input file to an Invocat Markov chain  
+    the-whale.txt     -- Text file used to generate the-whale.inv
+
+
+Usage
+-----
+Invocat is built in Lua and requires a Lua interpreter. If a file name argument
+is provided, the file will be executed as an Invocat program. With no arguments,
+Invocat will read from standard input.
+
+    $ ./invocat.lua [file]
+
+To run the Markov text generation example:
+
+    $ ./invocat.lua test/the-whale.inv
+
+The output from the Markov trainer can be piped directly to Invocat.
+
+    $ ./misc/train-markov.lua [file] | ./invocat
+
