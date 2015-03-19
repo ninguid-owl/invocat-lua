@@ -33,5 +33,5 @@ To run the Markov text generation example:
 
 The output from the Markov trainer can be piped directly to Invocat.
 
-    $ ./misc/train-markov.lua [file] | ./invocat
+    $ ./misc/train-markov.lua [file] | ./invocat.lua
 
