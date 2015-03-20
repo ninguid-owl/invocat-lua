@@ -26,8 +26,13 @@ function send(x) coroutine.yield(x) end
 function lexer()
   -- definition of a token
   -- has a tag, a value, a length
+  local mt = {}
+  mt.__tostring = function(t)
+    return ("(%s %s)"):format(t.tag, t.value)
+  end
   function new_token(tag, value)
     local token = {}
+    setmetatable(token, mt)
     token.tag = tag
     token.value = value or ""
     token.length = token.value:len()
@@ -58,14 +63,16 @@ function lexer()
 
   -- create the lexical items
   local lex_items = {
+    new_lex("1RULE", '[-][-][-]+.*$'),
+    new_lex("2RULE", '[=][=][=]+.*$'),
     new_lex("COMMENT", '[-][-]%s+.*$'),
     -- allow certain punctuation in names
     new_lex("NAME", '[%w_%-!\'?.,;]+'),
     new_lex("LPAREN", '[(]'),
     new_lex("RPAREN", '[)]'),
-    new_lex("COLON", '%s?:'),
-    new_lex("LARROW", '%s?<[-]'),
-    new_lex("PIPE", '|'),
+    new_lex("COLON", '%s?:'), -- TODO %s* ?
+    new_lex("LARROW", '%s?<[-]'), -- TODO %s* ?
+    new_lex("PIPE", '|'), -- TODO surround with white ?
     new_lex("ESCAPE", '\\[n()]'),
     new_lex("BREAK", '\\$'),
     new_lex("PUNCT", '%p'),
@@ -75,8 +82,13 @@ function lexer()
   return coroutine.create(function()
     local next_line = io.read
     if arg[1] then
-      local f = assert(io.open(arg[1], "rb"))
-      next_line = function () return f:read() end
+      local f, status = io.open(arg[1], "rb")
+      if status then
+        -- if the open failed, then next_line remains as io.read
+        io.write(status,". Reading from stdin.\n")
+      else
+        next_line = function() return f:read() end
+      end
     end
     local linenum = 0
     local line = next_line()
@@ -84,10 +96,8 @@ function lexer()
       -- for each line
       linenum = linenum + 1
       -- if linenum > 1 then we've read a new line
-      if linenum > 1 then send(new_token("NEWLINE", "")) end -- TODO
-      --TODO: rm
-      --io.write("\t\t", ("%5d "):format(linenum), line, "\n")
-
+      if linenum > 1 then send(new_token("NEWLINE", "")) end
+      -- io.write("\t\t", ("%5d "):format(linenum), line, "\n") -- TODO
       -- start at index 1 and try to match patterns
       local i = 1
       while i <= line:len() do
@@ -107,10 +117,12 @@ function lexer()
 end
 
 -- parse tokens from the lexer
+-- we need two tokens of lookahead
 function parser(lexer)
   local prev_token = nil
   local token = receive(lexer)
-  local next_token = receive(lexer)
+  local token1 = receive(lexer)
+  local token2 = receive(lexer)
   -- functions to look ahead at and consume tokens from the lexer
   function tag(...)
     if token then
@@ -120,14 +132,19 @@ function parser(lexer)
     end
     return false
   end
-  function peek(tag)
-    if next_token and next_token.tag == tag then return true end
+  function peek(tag1, tag2)
+    if tag1 and tag2 and token1 and token2 then
+      if token1.tag == tag1 and token2.tag == tag2 then return true end
+    elseif tag1 and token1 then
+      if token1.tag == tag1 then return true end
+    end
     return false
   end
   function take()
     prev_token = token
-    token = next_token
-    next_token = receive(lexer) or new_token("EOF")
+    token = token1
+    token1 = token2
+    token2 = receive(lexer) or new_token("EOF")
     return token
   end
 
@@ -208,7 +225,7 @@ function parser(lexer)
     end
     return r and ref(r) or nil
   end
-  -- resolution is name <- itemlist
+  -- resolution is name <- inlineitemlist
   -- returns a Res abstract syntax node or nil
   function make_Hold()
     if not peek("LARROW") then
@@ -222,7 +239,7 @@ function parser(lexer)
     -- match : and then consume whitespace
     take()
     make_white()
-    local items = make_itemlist()
+    local items = make_inlineitemlist()
     return res(name, items)
   end
   -- an item is a reference, literal, or mix of items
@@ -255,8 +272,39 @@ function parser(lexer)
       end
     end
   end
-  -- itemlist
-  function make_itemlist()
+  function make_Formatted_Item()
+    local i = nil
+    -- ref or lit
+    i = make_reference() or make_literal()
+    if not i then
+      --print("Error making item: could not find literal or reference")
+      return nil
+    end
+    -- whitespace between items is sometimes significant
+    local w, previous = make_white()
+    -- if an item is followed by EOF, then that's it
+    if tag("EOF") then return i end
+    -- if followed by a newline, then convert that to a space
+    if tag("NEWLINE") then
+      w = " "
+      previous = token
+      take()
+    end
+    local item = make_Formatted_Item()
+    if item then
+      -- if we saw a ) before this item then keep the whitespace as a literal
+      if previous and
+         (previous.tag == "RPAREN" or previous.tag == "NEWLINE") then
+        local ws = lit(w)
+        i = mix(i, ws)
+      end
+      return mix(i, item)
+    else
+      return i
+    end
+  end
+  -- inlineitemlist
+  function make_inlineitemlist()
     local i = make_Item()
     if not i then
       --print("Error making itemlist: could not find item")
@@ -276,10 +324,61 @@ function parser(lexer)
     end
     return items
   end
+  -- listitemlist
+  -- TODO are these all the same basically? could take sep as param?
+  function make_listitemlist()
+    local i = make_Item()
+    if not i then
+      --print("Error making itemlist: could not find item")
+      return nil
+    end
+    local items = {i}
+    while tag("NEWLINE") do
+      -- match separator and consume whitespace
+      take()
+      make_white()
+      -- a second newline ends the inline itemlist
+      if tag("NEWLINE") then break end
+      local item = make_Item()
+      if not item then
+        --print("Error making itemlist: could not find item")
+      else
+        items[#items+1] = item
+      end
+    end
+    return items
+  end
+  -- formatteditemlist
+  function make_formatteditemlist()
+    local i = make_Formatted_Item()
+    if not i then
+      --print("Error making itemlist: could not find item")
+      return nil
+    end
+    local items = {i}
+    while tag("1RULE") do
+      -- match separator and consume whitespace
+      take()
+      make_white()
+      take() -- take the newline after the rule
+      make_white()
+      -- a second newline ends the formatted itemlist
+      if tag("NEWLINE") then break end
+      local item = make_Formatted_Item()
+      if not item then
+        --print("Error making itemlist: could not find item")
+      else
+        items[#items+1] = item
+      end
+    end
+    return items
+  end
   -- a List is a definition
   -- returns a Def abstract sytnax node or nil
   function make_List()
-    if not peek("COLON") then
+    if not (peek("COLON") or
+            peek("NEWLINE", "1RULE") or
+            peek("NEWLINE", "2RULE")) then
       return nil
     end
     local name = make_name()
@@ -287,10 +386,21 @@ function parser(lexer)
       --print("Error making List: could not find NAME")
       return nil
     end
-    -- match : and then consume whitespace
+    -- take : or \n and then consume whitespace
     take()
     make_white()
-    local items = make_itemlist()
+    local items = nil
+    if tag("1RULE") then
+      take() -- rule
+      take() -- \n
+      items = make_listitemlist()
+    elseif tag("2RULE") then
+      take() -- rule
+      take() -- \n
+      items = make_formatteditemlist()
+    else
+      items = make_inlineitemlist()
+    end
     return def(name, items)
   end
 
@@ -352,6 +462,7 @@ function res(name, items) return Node.new("Res", {name, items}) end
 
 state = {}
 math.randomseed(os.time())
+-- math.randomseed(0) -- TODO!
 function eval(term)
   local tag = term.tag
   local v = term.value
@@ -398,6 +509,7 @@ for _,s in ipairs(statements) do
   r = eval(s)
   if r then print(r) end
 end
+-- print(os.clock())
 
 -- tests
 --[[

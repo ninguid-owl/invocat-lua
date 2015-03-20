@@ -24,11 +24,17 @@ statement ::= definition
             | resolution
             | item
 
-definition ::= name ':' itemlist
+definition ::= inlinedef | listdef | formatteddef
 
-resolution ::= name '<-' itemlist
+inlinedef ::= name ':' inlineitemlist
+listdef ::= name '\n' 1rule '\n' listitemlist
+formatteddef ::= name '\n' 2rule '\n' formatteditemlist
 
-itemlist ::= item {'|' itemlist}
+resolution ::= name '<-' inlineitemlist
+
+inlineitemlist ::= item {'|' inlineitemlist}
+listitemlist ::= item {'\n' listitemlist}
+formatteditemlist :: = item {'\n' 1rule '\n' formatteditemlist}
 
 item ::= literal {item}
        | reference {item}
@@ -51,6 +57,8 @@ Lexical Syntax
 --------------
 Regular expressions.
 
+1rule ::= [-][-][-]+.*$
+2rule ::= [=][=][=]+.*$
 comment ::= [-][-]\s+.*$
 name ::= [\w-_',.?!]+
 lparen ::= [(]
