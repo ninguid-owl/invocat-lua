@@ -78,3 +78,68 @@ Du thé, s'il vous plaît.
 -- easily express the infinite!
 -- i: (i)
 -- (i)
+
+-- list style definitions
+-- one item per line, ended with a blank line
+-- indentation doesn't matter
+-- optional rule to close
+-- comments inside items OK
+
+col
+------
+maz -- a blue
+coc
+        ind
+    tar
+vir
+------ this is optional
+
+colors - (col), (col), (col), (col), etc.
+
+nonny
+----- anything or nothing can go here
+a bold (1)
+a super (5) \
+        (4)
+-- \ still works to wrap lines, and comment lines can intervene
+if this is printed with an n in front, then comment lines can intervene
+
+n - (nonny)
+n - (nonny)
+n - (nonny)
+
+-- formatted table style definitions
+
+shipwr
+======
+a formatted        -- and has trailing white space
+entry doesn't require   
+one to use backslash to break lines     
+-----
+another entry, (col) in hue
+-----
+close with two blanks, a double rule, or a rule
+=====
+
+s - (shipwr)
+s - (shipwr)
+s - (shipwr)
+
+noclose
+=======
+a 
+literal
+table
+-------
+i just checked and only one entry works too
+
+ruleclose
+=========
+a
+table
+--------
+i JUST checked and only one entry works too
+--------
+
+nc - (noclose)
+rc - (ruleclose)

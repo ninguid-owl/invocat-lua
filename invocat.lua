@@ -254,6 +254,8 @@ function parser(lexer)
     end
     -- whitespace between items is sometimes significant
     local w, previous = make_white()
+    -- if there's a trailing comment, consume it
+    if tag("COMMENT") then take() end
     -- if an item is followed by a newline or EOF, then that's it
     -- otherwise, it's followed by another item
     if tag("NEWLINE", "EOF") then
@@ -282,6 +284,8 @@ function parser(lexer)
     end
     -- whitespace between items is sometimes significant
     local w, previous = make_white()
+    -- if there's a trailing comment, consume it
+    if tag("COMMENT") then take() end
     -- if an item is followed by EOF, then that's it
     if tag("EOF") then return i end
     -- if followed by a newline, then convert that to a space
@@ -337,7 +341,12 @@ function parser(lexer)
       -- match separator and consume whitespace
       take()
       make_white()
-      -- a second newline ends the inline itemlist
+      -- ignore comments or rule lines inside of the list itemlist
+      while tag("COMMENT", "1RULE") do
+        take() -- take the comment/rule
+        take() -- take the newline
+      end
+      -- a second newline ends the list itemlist
       if tag("NEWLINE") then break end
       local item = make_Item()
       if not item then
