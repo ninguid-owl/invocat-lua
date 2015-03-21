@@ -151,3 +151,26 @@ no spaces in names
 this should get printed as a literal
 ------------------------------------
 and so should this
+
+-- weighted tables
+-- weights are optional
+
+colors'
+=========
+[1] mazarine
+---------
+   cochineal
+---------
+[8-3] tartrazine [explosive dyestuff] -- wooops backwards range
+---------
+   [9] viridian
+---------
+[10-20] hyacinth
+---------
+
+weighted - (colors')
+weighted - (colors')
+weighted - (colors')
+weighted - (colors')
+weighted - (colors')
+weighted - (colors')

@@ -240,7 +240,7 @@ function parser(lexer)
         take() -- hyphen
         local max = tonumber(token.value)
         take() -- number
-        w = max-min+1
+        w = math.abs(max-min)+1
       end
       if tag("PUNCT") and token.value == "]" then take() end
       make_white()
@@ -500,7 +500,7 @@ function res(name, items) return Node.new("Res", {name, items}) end
 
 state = {}
 math.randomseed(os.time())
- math.randomseed(0) -- TODO!
+-- math.randomseed(0) -- TODO!
 function eval(term)
   local tag = term.tag
   local v = term.value
