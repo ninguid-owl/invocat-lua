@@ -67,9 +67,13 @@ function lexer()
     new_lex("2RULE", '[=][=][=]+.*$'),
     new_lex("COMMENT", '[-][-]%s+.*$'),
     -- allow certain punctuation in names
-    new_lex("NAME", '[%w_%-!\'?.,;]+'),
+    new_lex("NAME", '[%a_][%w_%-!\'?.,;]*'),
+    new_lex("NUMBER", '[%d]+'),
     new_lex("LPAREN", '[(]'),
     new_lex("RPAREN", '[)]'),
+    new_lex("LBRACK", '[[]'),
+    new_lex("RBRACK", '[]]'),
+    new_lex("HYPHEN", '[-]'),
     new_lex("COLON", '%s?:'), -- TODO %s* ?
     new_lex("LARROW", '%s?<[-]'), -- TODO %s* ?
     new_lex("PIPE", '|'), -- TODO surround with white ?
@@ -173,7 +177,8 @@ function parser(lexer)
   -- the parser has no trouble with colons inside ink
   function make_ink()
     local s = ""
-    while tag("NAME", "PUNCT", "COLON", "ESCAPE") do
+    while tag("NAME", "NUMBER", "PUNCT", "COLON", "ESCAPE",
+              "LBRACK", "RBRACK", "HYPHEN") do
       s = s..token.value
       take()
     end
@@ -202,7 +207,9 @@ function parser(lexer)
     local w = make_white()
     -- when formulating a literal, keep whitespace at the end if the
     -- the next token is something special
-    if w and tag("NAME", "PUNCT", "LPAREN", "ESCAPE") then
+    -- TODO this is a bit ridiculous now, along with make_ink()
+    if w and tag("NAME", "NUMBER", "PUNCT", "LPAREN", "ESCAPE",
+                 "LBRACK", "HYPHEN") then
       l = lit(l..w)
       l = make_literal(l)
     else
@@ -224,6 +231,26 @@ function parser(lexer)
       take() -- consume right paren
     end
     return r and ref(r) or nil
+  end
+  -- weight is [n] or [n-n']
+  -- returns an int weight
+  function make_weight()
+    local w = 1
+    if tag("LBRACK") and peek("NUMBER") then
+      take() -- consume [
+      local min = tonumber(token.value)
+      take() -- number
+      -- if there's a hyphen then we have a range; otherwise the weight is one
+      if tag("HYPHEN") and peek("NUMBER") then
+        take() -- hyphen
+        local max = tonumber(token.value)
+        take() -- number
+        w = max-min+1
+      end
+      if tag("RBRACK") then take() end
+      make_white()
+    end
+    return w
   end
   -- resolution is name <- inlineitemlist
   -- returns a Res abstract syntax node or nil
@@ -331,12 +358,14 @@ function parser(lexer)
   -- listitemlist
   -- TODO quite similar to inlineitemlist; could take sep as param?
   function make_listitemlist()
+    local w = make_weight()
     local i = make_Item()
     if not i then
       --print("Error making itemlist: could not find item")
       return nil
     end
-    local items = {i}
+    local items = {}
+    for n=1,w do items[#items+1] = i end
     while tag("NEWLINE") do
       -- match separator and consume whitespace
       take()
@@ -345,26 +374,30 @@ function parser(lexer)
       while tag("COMMENT", "1RULE") do
         take() -- take the comment/rule
         take() -- take the newline
+        make_white()
       end
       -- a second newline ends the list itemlist
       if tag("NEWLINE") then break end
+      w = make_weight()
       local item = make_Item()
       if not item then
         --print("Error making itemlist: could not find item")
       else
-        items[#items+1] = item
+        for n=1,w do items[#items+1] = item end
       end
     end
     return items
   end
   -- formatteditemlist
   function make_formatteditemlist()
+    local w = make_weight()
     local i = make_Formatted_Item()
     if not i then
       --print("Error making itemlist: could not find item")
       return nil
     end
-    local items = {i}
+    local items = {}
+    for n=1,w do items[#items+1] = i end
     while tag("1RULE") do
       -- match separator and consume whitespace
       take()
@@ -373,11 +406,12 @@ function parser(lexer)
       make_white()
       -- a second newline ends the formatted itemlist
       if tag("NEWLINE") then break end
+      w = make_weight()
       local item = make_Formatted_Item()
       if not item then
         --print("Error making itemlist: could not find item")
       else
-        items[#items+1] = item
+        for n=1,w do items[#items+1] = item end
       end
     end
     return items
