@@ -143,3 +143,10 @@ i JUST checked and only one entry works too
 
 nc - (noclose)
 rc - (ruleclose)
+
+
+no spaces in names
+==================
+this should get printed as a literal
+------------------------------------
+and so should this

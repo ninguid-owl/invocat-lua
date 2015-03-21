@@ -18,7 +18,7 @@ Item ::= Ref name
 
 Concrete Syntax
 ---------------
-EBNF: {A} denotes 0 or more As.
+EBNF: {A} denotes 0 or more As. [A] is optional.
 
 statement ::= definition
             | resolution
@@ -34,10 +34,13 @@ resolution ::= name '<-' inlineitemlist
 
 inlineitemlist ::= item {'|' inlineitemlist}
 listitemlist ::= item {'\n' listitemlist}
-formatteditemlist :: = item {'\n' 1rule '\n' formatteditemlist}
+formatteditemlist :: = formatteditem {'\n' 1rule '\n' formatteditemlist}
 
 item ::= literal {item}
        | reference {item}
+
+formatteditem ::= literal {['\n'] item}
+                | reference {['\n'] item}
 
 reference ::= '(' name ')'
 

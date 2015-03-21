@@ -329,7 +329,7 @@ function parser(lexer)
     return items
   end
   -- listitemlist
-  -- TODO are these all the same basically? could take sep as param?
+  -- TODO quite similar to inlineitemlist; could take sep as param?
   function make_listitemlist()
     local i = make_Item()
     if not i then
