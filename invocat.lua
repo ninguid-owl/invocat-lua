@@ -102,6 +102,8 @@ function lexer()
       -- io.write("\t\t", ("%5d "):format(linenum), line, "\n") -- TODO
       -- start at index 1 and try to match patterns
       local i = 1
+      -- discard leading white space on a line (this seems crude, but ok)
+      line = line:gsub("^[%s]+", "")
       while i <= line:len() do
         for _,f in ipairs(lex_items) do
           local match = f(line, i)
