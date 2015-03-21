@@ -23,7 +23,6 @@ misc/
 
 The Language
 ------------
-
 Invocat is language for randomly generating from grammars, which take the form
 of lists. There are three ways to make a list. Here are some illustrative
 examples:
