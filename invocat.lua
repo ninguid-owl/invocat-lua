@@ -431,10 +431,12 @@ function parser(lexer)
     if tag("1RULE") then
       take() -- rule
       take() -- \n
+      make_white()
       items = make_listitemlist()
     elseif tag("2RULE") then
       take() -- rule
       take() -- \n
+      make_white()
       items = make_formatteditemlist()
     else
       items = make_inlineitemlist()
