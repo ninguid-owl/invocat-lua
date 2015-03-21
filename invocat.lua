@@ -67,13 +67,11 @@ function lexer()
     new_lex("2RULE", '[=][=][=]+.*$'),
     new_lex("COMMENT", '[-][-]%s+.*$'),
     -- allow certain punctuation in names
-    new_lex("NAME", '[%a_][%w_%-!\'?.,;]*'),
     new_lex("NUMBER", '[%d]+'),
+    new_lex("NAME", '[%w_%!\'?.,;]+'),
+    -- TODO don't nec need to separate out punctuation
     new_lex("LPAREN", '[(]'),
     new_lex("RPAREN", '[)]'),
-    new_lex("LBRACK", '[[]'),
-    new_lex("RBRACK", '[]]'),
-    new_lex("HYPHEN", '[-]'),
     new_lex("COLON", '%s?:'), -- TODO %s* ?
     new_lex("LARROW", '%s?<[-]'), -- TODO %s* ?
     new_lex("PIPE", '|'), -- TODO surround with white ?
@@ -177,8 +175,7 @@ function parser(lexer)
   -- the parser has no trouble with colons inside ink
   function make_ink()
     local s = ""
-    while tag("NAME", "NUMBER", "PUNCT", "COLON", "ESCAPE",
-              "LBRACK", "RBRACK", "HYPHEN") do
+    while tag("NAME", "NUMBER", "PUNCT", "COLON", "ESCAPE") do
       s = s..token.value
       take()
     end
@@ -207,9 +204,7 @@ function parser(lexer)
     local w = make_white()
     -- when formulating a literal, keep whitespace at the end if the
     -- the next token is something special
-    -- TODO this is a bit ridiculous now, along with make_ink()
-    if w and tag("NAME", "NUMBER", "PUNCT", "LPAREN", "ESCAPE",
-                 "LBRACK", "HYPHEN") then
+    if w and tag("NAME", "NUMBER", "PUNCT", "LPAREN", "ESCAPE") then
       l = lit(l..w)
       l = make_literal(l)
     else
@@ -236,18 +231,18 @@ function parser(lexer)
   -- returns an int weight
   function make_weight()
     local w = 1
-    if tag("LBRACK") and peek("NUMBER") then
+    if tag("PUNCT") and peek("NUMBER") and token.value == "[" then
       take() -- consume [
       local min = tonumber(token.value)
       take() -- number
       -- if there's a hyphen then we have a range; otherwise the weight is one
-      if tag("HYPHEN") and peek("NUMBER") then
+      if tag("PUNCT") and peek("NUMBER") and token.value == "-" then
         take() -- hyphen
         local max = tonumber(token.value)
         take() -- number
         w = max-min+1
       end
-      if tag("RBRACK") then take() end
+      if tag("PUNCT") and token.value == "]" then take() end
       make_white()
     end
     return w
@@ -505,7 +500,7 @@ function res(name, items) return Node.new("Res", {name, items}) end
 
 state = {}
 math.randomseed(os.time())
--- math.randomseed(0) -- TODO!
+ math.randomseed(0) -- TODO!
 function eval(term)
   local tag = term.tag
   local v = term.value

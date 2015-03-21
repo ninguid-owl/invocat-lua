@@ -48,15 +48,15 @@ b - (h)
 b - (h)
 
 -- resolution goes through nested defs
-1: 1 (2) | I (2) | X (2)
-2: 2 (3) | II (3) | XX (3)
-3: 3 (4) | III (4) | XXX (4)
-4: 4 (5) | IV (5) | XXXX (5)
-5: 5 | V | XXXXX
-seq <- (1)
+_1: 1 (_2) | I (_2) | X (_2)
+_2: 2 (_3) | II (_3) | XX (_3)
+_3: 3 (_4) | III (_4) | XXX (_4)
+_4: 4 (_5) | IV (_5) | XXXX (_5)
+_5: 5 | V | XXXXX
+seq <- (_1)
 a - (seq)
 a - (seq)
-seq <- (1)
+seq <- (_1)
 b - (seq)
 b - (seq)
 
@@ -98,9 +98,9 @@ colors - (col), (col), (col), (col), etc.
 
 nonny
 ----- anything or nothing can go here
-a bold (1)
-a super (5) \
-        (4)
+a bold (_1)
+a super (_5) \
+        (_4)
 -- \ still works to wrap lines, and comment lines can intervene
 if this is printed with an n in front, then comment lines can intervene
 
