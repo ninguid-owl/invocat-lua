@@ -1,150 +1,351 @@
 -- --------------------------------------------------------------------- armor
 armor: (mail) | (leather)
 
-leather: (org_armor_adj) (type_leather) (leather_decoration). |\
-         (org_armor_adj) (type_leather) (armor_accessory). |\
-         (org_armor_adj) (type_leather) (leather_decoration) \
-         and (armor_accessory).
+leather
+----------------------------------------------------
+(org_armor_adj) (type_leather) (leather_decoration).
+(org_armor_adj) (type_leather) (armor_accessory).
+(org_armor_adj) (type_leather) (leather_decoration) and (armor_accessory).
 
-mail: (inorg_armor_adj) (type_mail) of (material_mail), (mail_decoration). |\
-      (inorg_armor_adj) (type_mail) of (material_mail), (armor_accessory). |\
-      (inorg_armor_adj) (type_mail) of (material_mail), (mail_decoration) \
-      and (armor_accessory).
+mail
+====================================================================
+(inorg_armor_adj) (type_mail) of (material_mail), (mail_decoration).
+--------------------------------------------------------------------
+(inorg_armor_adj) (type_mail) of (material_mail), (armor_accessory).
+--------------------------------------------------------------------
+(inorg_armor_adj) (type_mail) of (material_mail), (mail_decoration)
+and (armor_accessory).
+--------------------------------------------------------------------
 
-mail_decoration: enamelled (color) | trimmed with fur |\
-                 inscribed with (armor_inscription) |\
-                 etched with (armor_design_engraved)
+mail_decoration
+---------------
+enamelled (color)
+trimmed with fur
+inscribed with (armor_inscription)
+etched with (armor_design_engraved)
 
-leather_decoration: stained (color) | trimmed with fur |\
-                    inscribed with (armor_inscription) |\
-                    etched with (armor_design_engraved)
+leather_decoration
+------------------
+stained (color)
+trimmed with fur
+inscribed with (armor_inscription)
+etched with (armor_design_engraved)
 
-org_armor_adj: An old | An ancient | A dark | A warm | A fine | A worn |\
-               A light | A heavy | A thick | A thin
+org_armor_adj
+-------------
+An old
+An ancient
+A dark
+A warm
+A fine
+A worn
+A light
+A heavy
+A thick
+A thin
 
-inorg_armor_adj: An old | An ancient | A dark | A gleaming | A bright |\
-                 A shining | A warm | A cold | A fine | A worn |\
-                 A notched | A tarnished | A light | A heavy
+inorg_armor_adj
+---------------
+An old
+An ancient
+A dark
+A gleaming
+A bright
+A shining
+A warm
+A cold
+A fine
+A worn
+A notched
+A tarnished
+A light
+A heavy
 
-type_leather: leather shirt | leather coat | leather corslet |\
-              leather greatcoat
+type_leather
+------------
+leather shirt
+leather coat
+leather corslet
+leather greatcoat
 
-type_mail: mail shirt | mail coat | mail hauberk
+type_mail
+---------
+mail shirt
+mail coat
+mail hauberk
 
-armor_inscription: a bedouh | a charm | a seal | instructions for warding \
-                   against (creatures) | an old recipe | a poem
+armor_inscription
+-----------------
+a bedouh
+a charm
+a seal
+instructions for warding against (creatures)
+an old recipe
+a poem
 
-armor_design_engraved: arabesque | falling leaves | tangled vines |\
-    flowering vines | a map of stars | a map of a distant land |\
-    geometric wards | a pattern of fur | a pattern of frost | a pattern of waves
+armor_design_engraved
+---------------------
+arabesque
+falling leaves
+tangled vines
+flowering vines
+a map of stars
+a map of a distant land
+geometric wards
+a pattern of fur
+a pattern of frost
+a pattern of waves
 
-armor_accessory: laced with (color) cord |\
-    fitted with (material_fittings) grommets |\
-    fitted with (material_fittings) clasps |\
-    adorned with tiny bells hanging from the hem
+armor_accessory
+---------------
+laced with (color) cord
+fitted with (material_fittings) grommets
+fitted with (material_fittings) clasps
+adorned with tiny bells hanging from the hem
 
 -- ----------------------------------------------------------------- materials
-material_mail: iron | black iron | star iron | silver
+material_mail
+-------------
+iron
+black iron
+star iron
+silver
 
-material_blade: iron | black iron | star iron | silver | steel | orichalcum
+material_blade
+--------------
+iron
+black iron
+star iron
+silver
+steel
+orichalcum
 
-material_fittings: iron | black iron | star iron | ithildin | silver | steel |\
-                   orichalcum | bone | ivory | ebony | ironwood
+material_fittings
+-----------------
+iron
+black iron
+star iron
+ithildin
+silver
+steel
+orichalcum
+bone
+ivory
+ebony
+ironwood
 
-material_haft: iron | black iron | star iron | silver | steel | ebony |\
-               mahogany | ash | teak | dogwood | ironwood | yew | rowan
+material_haft
+-------------
+iron
+black iron
+star iron
+silver
+steel
+ebony
+mahogany
+ash
+teak
+dogwood
+ironwood
+yew
+rowan
 
-color: cochineal | cinnabar | crimson | litharge | indanthrene | mazarine |\
-       indigo | cobalt | heliotrope | violet | amaranth | puce | viridian |\
-       verdigris | sage | chlorine | gamboge | sun-gold | tartrazine |\
-       aurantia | hyacinth | scarlet | nacarat | aurora | umber | sienna | bice
+color
+-----
+cochineal
+cinnabar
+crimson
+litharge
+indanthrene
+mazarine
+indigo
+cobalt
+heliotrope
+violet
+amaranth
+puce
+viridian
+verdigris
+sage
+chlorine
+gamboge
+sun-gold
+tartrazine
+aurantia
+hyacinth
+scarlet
+nacarat
+aurora
+umber
+sienna
+bice
 
 -- ---------------------------------------------------------------------- arms
 arms: (sword) | (axe) | (staff)
 
 sword_base: (adj) (material_blade) (type_sword)(possibility_enchantment).
-sword: (sword_base) (sword_decoration). |\
-       (sword_base) (sword_accessory). |\
-       (sword_base) (sword_decoration). (sword_accessory).
 
-axe_base: (adj) (material_blade) (type_axe), \
-          (material_haft)-hafted(possibility_enchantment).
-axe: (axe_base) (axe_decoration). |\
-     (axe_base) (axe_accessory). |\
-     (axe_base) (axe_decoration). (axe_accessory).
+sword
+-----
+(sword_base) (sword_decoration).
+(sword_base) (sword_accessory).
+(sword_base) (sword_decoration). (sword_accessory).
+
+axe_base
+================================================
+(adj) (material_blade) (type_axe),
+(material_haft)-hafted(possibility_enchantment).
+------------------------------------------------
+
+axe
+---
+(axe_base) (axe_decoration).
+(axe_base) (axe_accessory).
+(axe_base) (axe_decoration). (axe_accessory).
 
 staff_base: (adj) staff of (material_haft)(possibility_enchantment).
-staff: (staff_base) (staff_decoration). |\
-       (staff_base) (staff_accessory). |\
-       (staff_base) (staff_decoration). (staff_accessory).
 
-sword_decoration: The (shape_blade) blade is (decoration_blade) |\
-  The (material_fittings) (sword_fittings) is (decoration_fittings) |\
-  The (shape_blade) blade is (decoration_blade). The (material_fittings) \
-  (sword_fittings) is (decoration_fittings)
+staff
+-----
+(staff_base) (staff_decoration).
+(staff_base) (staff_accessory).
+(staff_base) (staff_decoration). (staff_accessory).
 
-axe_decoration: The (shape_blade) blade is (decoration_blade) |\
-  The (material_fittings) (axe_fittings) is (decoration_fittings) |\
-  The (shape_blade) blade is (decoration_blade). The (material_fittings) \
-  (axe_fittings) is (decoration_fittings) |
+sword_decoration
+=================================================================
+The (shape_blade) blade is (decoration_blade)
+-----------------------------------------------------------------
+The (material_fittings) (sword_fittings) is (decoration_fittings)
+-----------------------------------------------------------------
+The (shape_blade) blade is (decoration_blade). The (material_fittings)
+(sword_fittings) is (decoration_fittings)
+-----------------------------------------------------------------
 
-staff_decoration: It is bound with (material_blade) ferrules |\
-  It is bound with a (material_blade) coil |\
-  It is bound with rings of (material_fittings) |\
-  It is (decoration_fittings)
+axe_decoration
+=================================================================
+The (shape_blade) blade is (decoration_blade)
+-----------------------------------------------------------------
+The (material_fittings) (axe_fittings) is (decoration_fittings)
+-----------------------------------------------------------------
+The (shape_blade) blade is (decoration_blade). The (material_fittings)
+(axe_fittings) is (decoration_fittings)
+-----------------------------------------------------------------
+
+staff_decoration
+----------------
+It is bound with (material_blade) ferrules
+It is bound with a (material_blade) coil
+It is bound with rings of (material_fittings)
+It is (decoration_fittings)
 
 -- 50% chance of enchantment!
-possibility_enchantment: (nothing) | (enchantment)
+possibility_enchantment
+-----------------------
+ [1-10] (nothing)
+[11-20] (enchantment)
 
-enchantment: , its edges limned as with (color) fire |\
-             , which glows a faint (color) in the presence of (creatures) |\
-             , which gathers light | , which numbs the hand |\
-             , dripping sparks of (color) |\
-             , spitting azotic motes of (color) light | , humming faintly
+enchantment
+-----------
+, its edges limned as with (color) fire
+, which glows a faint (color) in the presence of (creatures)
+, which gathers light
+, which numbs the hand
+, dripping sparks of (color)
+, spitting azotic motes of (color) light
+, humming faintly
 
-adj: An old | An ancient | A dire | A fell | A dark | A gleaming | A bright |\
-     A shining | A warm | A cold | A fine | A keen | A dull | A worn |\
-     A notched | A tarnished | A light | A heavy
+adj
+---
+An old
+An ancient
+A dire
+A fell
+A dark
+A gleaming
+A bright
+A shining
+A warm
+A cold
+A fine
+A keen
+A dull
+A worn
+A notched
+A tarnished
+A light
+A heavy
 
-type_sword: shortsword | longsword | war sword | two-handed sword |\
-            greatsword | falchion
+type_sword
+----------
+shortsword
+longsword
+war sword
+two-handed sword
+greatsword
+falchion
 
 type_axe: handaxe | battleaxe | long-hafted axe | greataxe
 
 shape_blade: leaf-shaped | straight | slender | tapering | broad | wide
 
-decoration_blade: inlaid with (material_fittings) |\
-  engraved with (design_engraved) | inscribed with (inscription) |\
-  scored with runes
+decoration_blade
+----------------
+inlaid with (material_fittings)
+engraved with (design_engraved)
+inscribed with (inscription)
+scored with runes
 
-inscription: a bedouh | instructions for warding against (creatures) |\
-             a recipe for pie | a poem
+inscription
+-----------
+a bedouh
+instructions for warding against (creatures)
+a recipe for pie
+an alchemical recipe of unknown effect
+a poem
 
-design_engraved: arabesque | falling leaves | tangled vines |\
-  flowering vines | a map of stars | a map of a distant land |\
-  geometric wards | a pattern of fur | a pattern of frost |\
-  a pattern of waves
+design_engraved
+---------------
+arabesque
+falling leaves
+tangled vines
+flowering vines
+a map of stars
+a map of a distant land
+geometric wards
+a pattern of fur
+a pattern of frost
+a pattern of waves
 
 sword_fittings: hilt | grip | guard | pommel | guard and pommel
 
 axe_fittings: grip | pommel
 
-decoration_fittings: scrimshawed | intagliated |\
-  inlaid with (material_fittings) | set with stones
+decoration_fittings
+-------------------
+scrimshawed
+intagliated
+inlaid with (material_fittings)
+set with stones
 
-sword_accessory: A (color) tassel trails from the hilt |\
-                 A small (material_fittings) bell hangs from the hilt |
+sword_accessory
+---------------
+A (color) tassel trails from the hilt
+A small (material_fittings) bell hangs from the hilt
 
-axe_accessory: A (color) tassel trails from the haft |\
-               A small (material_fittings) bell hangs from the haft |\
-               The haft has a ferrule of (material_blade)
+axe_accessory
+-------------
+A (color) tassel trails from the haft
+A small (material_fittings) bell hangs from the haft
+The haft has a ferrule of (material_blade)
 
-staff_accessory: A (color) tassel trails from the tip |\
-                 An augite hangs from the upright end |\
-                 A small (material_mail) bell hangs from the upright end
+staff_accessory
+---------------
+A (color) tassel trails from the tip
+An augite hangs from the upright end
+A small (material_mail) bell hangs from the upright end
 
 creatures: beasts | wights | demons | faeries | goblins
 
 -- ------------------------------------------------------------------ examples
-(arms)
-(armor)
+* (arms)
+* (armor)
