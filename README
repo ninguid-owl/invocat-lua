@@ -23,7 +23,7 @@ misc/
 
 The Language
 ------------
-Invocat is language for randomly generating from grammars, which take the form
+Invocat is a language for randomly generating from grammars, which take the form
 of lists. There are three ways to make a list. Here are some illustrative
 examples:
 
@@ -88,7 +88,7 @@ If you want to refer to the same thing more than once,
 
 Usage
 -----
-Invocat is built in Lua (5.2.0) and requires a Lua interpreter. If a file name
+Invocat is written in Lua (5.2.0) and requires a Lua interpreter. If a file name
 argument is provided, the file will be executed as an Invocat program. With no
 arguments, Invocat will read from standard input.
 

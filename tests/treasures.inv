@@ -1,4 +1,4 @@
--- --------------------------------------------------------------------- armor
+----------------------------------------------------------------------- armor
 armor: (mail) | (leather)
 
 leather
@@ -103,7 +103,7 @@ fitted with (material_fittings) grommets
 fitted with (material_fittings) clasps
 adorned with tiny bells hanging from the hem
 
--- ----------------------------------------------------------------- materials
+------------------------------------------------------------------- materials
 material_mail
 -------------
 iron
@@ -180,7 +180,7 @@ umber
 sienna
 bice
 
--- ---------------------------------------------------------------------- arms
+------------------------------------------------------------------------ arms
 arms: (sword) | (axe) | (staff)
 
 sword_base: (adj) (material_blade) (type_sword)(possibility_enchantment).
@@ -238,11 +238,11 @@ It is bound with a (material_blade) coil
 It is bound with rings of (material_fittings)
 It is (decoration_fittings)
 
--- 50% chance of enchantment!
+-- 20% chance of enchantment!
 possibility_enchantment
 -----------------------
- [1-10] (nothing)
-[11-20] (enchantment)
+ [1-16] (nothing)
+[17-20] (enchantment)
 
 enchantment
 -----------
@@ -346,6 +346,7 @@ A small (material_mail) bell hangs from the upright end
 
 creatures: beasts | wights | demons | faeries | goblins
 
--- ------------------------------------------------------------------ examples
+--------------------------------------------------------------------- examples
 * (arms)
 * (armor)
+
