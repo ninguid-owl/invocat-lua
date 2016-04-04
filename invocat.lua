@@ -68,7 +68,7 @@ function lexer()
     new_lex("COMMENT", '[-][-]%s+.*$'),
     -- allow certain punctuation in names
     new_lex("NUMBER", '[%d]+'),
-    new_lex("NAME", '[%w_%!\'?.,;]+'),
+    new_lex("NAME", '[%w_%!\'?.,;][%w_%!\'?.,;-]*'),
     -- TODO don't nec need to separate out punctuation
     new_lex("LPAREN", '[(]'),
     new_lex("RPAREN", '[)]'),
