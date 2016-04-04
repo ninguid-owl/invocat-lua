@@ -1,24 +1,23 @@
-Invocat  
+Invocat
 =======
-A nondeterministic, generative programming language by C & M Antoun.
-2015-03-18  
+A nondeterministic, generative programming language for text by C & M Antoun.
+2015-03-18
 
 
 Contents
 --------
-invocat.lua   -- The Invocat lexer, parser, and interpreter  
-README        -- This file  
+    invocat.lua   -- The Invocat lexer, parser, and interpreter
+    README        -- This file
 
-tests/
-    test.inv          -- Simple tests
-    the-whale.inv     -- Markov example trained on some of Moby Dick  
-    treasures.inv     -- A treasure generator
-    shipwrecked.inv   -- A random table
+    tests/
+        test.inv          -- Simple tests
+        the-whale.inv     -- Markov example trained on some of Moby Dick
+        treasures.inv     -- A treasure generator
+        shipwrecked.inv   -- A random table
 
-misc/
-    train-markov.lua  -- Convert an input file to an Invocat Markov chain  
-    the-whale.txt     -- Text file used to generate the-whale.inv
-
+    misc/
+        train-markov.lua  -- Convert an input file to an Invocat Markov chain
+        the-whale.txt     -- Text file used to generate the-whale.inv
 
 
 The Language
@@ -71,7 +70,7 @@ item.
       [6] firebomb!
 
 You get (random) results from lists with references, which are just the list
-names in parentheses. The next line just picks something from the 'something'
+names in parentheses. For example, the next line just picks something from the 'something'
 list that we defined above and adds a period to the end. Notice that its
 definition refers to other lists. If you refer to a list that's not defined, you
 get the empty string.
